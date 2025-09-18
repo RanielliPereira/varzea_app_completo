@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="treino-box">
+    <!-- Título centralizado -->
+    <h1 class="treino-titulo">{{ treino.titulo }}</h1>
+
+    <!-- Lista de exercícios centralizada -->
+    <ul class="treino-lista">
+      {% for ex in treino.exercicios %}
+        <li>{{ ex }}</li>
+      {% endfor %}
+    </ul>
+
+    <!-- Botão de Check-in -->
+    <form method="POST">
+      <button type="submit"
+              class="checkin-btn {% if feito %}checkin-feito{% endif %}">
+          {% if feito %}✔ Check-in Feito{% else %}Marcar Check-in{% endif %}
+      </button>
+    </form>
+
+    <!-- Botão de voltar ao Dashboard centralizado -->
+    <div class="back-center">
+      <a href="{{ url_for('dashboard') }}" class="back-btn">⬅️ Voltar ao Menu</a>
+    </div>
+
+    <!-- Navegação entre treinos -->
+    <div class="nav-treinos">
+      {% if anterior %}
+        <a class="btn" href="{{ url_for('treino_individual', treino_id=anterior) }}">⬅ Anterior</a>
+      {% endif %}
+      {% if proximo %}
+        <a class="btn" href="{{ url_for('treino_individual', treino_id=proximo) }}">Próximo ➡</a>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

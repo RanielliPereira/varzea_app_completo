@@ -1,0 +1,234 @@
+/* ---------- LOGIN ---------- */
+body.login-page {
+  background: url("/static/capa.png") center center / contain no-repeat fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  margin: 0;
+  font-family: Arial;
+  background-color: #000;
+}
+.login-box {
+  background: rgba(0,0,0,.8);
+  padding: 40px;
+  border-radius: 20px;
+  color: #fff;
+  width: 400px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.7);
+}
+.login-box input {
+  width: 95%;
+  padding: 16px;
+  margin: 12px 0;
+  border-radius: 10px;
+  border: none;
+  font-size: 1.3rem;
+}
+.login-box button {
+  width: 100%;
+  padding: 18px;
+  border: none;
+  border-radius: 10px;
+  background: #1f6f3f;
+  color: #fff;
+  font-weight: bold;
+  font-size: 1.4rem;
+}
+
+/* ---------- DASHBOARD ---------- */
+body.dashboard-page {
+  background: url("/static/inicial.png") center/cover no-repeat fixed;
+  margin: 0;
+  color: #fff;
+  font-family: Arial, sans-serif;
+}
+
+/* 🔹 Caixa maior, ocupa mais da altura */
+.dash-box {
+  max-width: 90%;                 /* ocupa quase a largura da tela */
+  margin: 4vh auto;               /* um pouco de margem em cima/baixo */
+  background: rgba(0,0,0,.70);
+  padding: 8vh 5vw;               /* mais “respiro” interno */
+  border-radius: 24px;
+  text-align: center;
+}
+
+/* 🔹 Título gigante */
+.dash-box h1 {
+  font-size: 8rem;                /* bem grande para celular */
+  font-weight: 1000;               /* mais pesado */
+  margin-bottom: 2vh;
+  letter-spacing: 1px;
+}
+
+/* 🔹 Saudação “E aí jogador…” maior */
+.dash-box h2 {
+  font-size: 3rem;
+  margin-bottom: 2vh;
+}
+
+/* 🔹 Frase motivacional grande e em itálico */
+.dash-box .quote {
+  font-size: 2rem;
+  font-style: italic;
+  margin-bottom: 4vh;
+  line-height: 1.4;
+}
+
+/* 🔹 Botões enormes */
+.btn {
+  display: block;
+  text-decoration: none;
+  background: #1f6f3f;
+  padding: 36px 0;                 /* bem alto */
+  border-radius: 22px;
+  color: #fff;
+  margin: 28px 0;
+  font-weight: bold;
+  font-size: 2.2rem;               /* fonte bem grande */
+  letter-spacing: 1.2px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.6);
+  transition: transform .2s ease, background .2s ease;
+}
+.btn:hover {
+  background: #185731;
+  transform: scale(1.08);
+}
+
+/* ---------- TREINO / CHECK-IN ---------- */
+.checkin-btn {
+  background: #2e7d32;
+  color: #fff;
+  border: none;
+  padding: 24px 40px;
+  border-radius: 14px;
+  font-weight: bold;
+  font-size: 1.8rem;
+  cursor: pointer;
+  display: block;
+  margin: 0 auto 40px auto;
+}
+.checkin-btn:hover { background:#1b5e20; transform: scale(1.05); }
+.checkin-btn.checkin-feito { background: #c62828; }
+
+/* ---------- BLOCO TREINO CENTRAL ---------- */
+.treino-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100%;
+  text-align: center;
+  padding: 40px;
+  box-sizing: border-box;
+}
+.treino-titulo {
+  font-size: 3rem;
+  font-weight: bold;
+  margin-bottom: 30px;
+}
+.treino-lista li {
+  font-size: 1.8rem;
+  margin-bottom: 16px;
+}
+.back-btn {
+  background: #333;
+  color: #fff;
+  padding: 20px 40px;
+  border-radius: 14px;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.8rem;
+  display: inline-block;
+  margin-top: 40px;
+}
+.back-btn:hover { background: #111; }
+
+/* ---------- PRÉ-JOGO ---------- */
+.pre-jogo-box {
+  max-width: 500px;
+  margin: 40px auto;
+  background: rgba(0,0,0,0.7);
+  padding: 20px;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1.3rem;          /* 🔹 fonte maior */
+  line-height: 1.8;
+}
+.pre-jogo-box ul {
+  list-style: disc inside;
+  margin-top: 15px;
+}
+
+/* ---------- PÓS-JOGO / RECUPERAÇÃO ---------- */
+.content h2 {
+  font-size: 2.6rem;          /* 🔹 título grande */
+  text-align: center;
+  margin-bottom: 25px;
+}
+.content .card {
+  background: rgba(0,0,0,0.7);
+  padding: 30px;
+  border-radius: 16px;
+  color: #fff;
+  font-size: 1.5rem;          /* 🔹 corpo do texto maior */
+  line-height: 1.9;
+}
+.content .card ul li {
+  font-size: 1.5rem;
+  margin-bottom: 14px;
+}
+.content p a {
+  display: inline-block;
+  margin-top: 30px;
+  background: #2e7d32;
+  color: #fff;
+  text-decoration: none;
+  padding: 16px 28px;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 1.4rem;
+}
+.content p a:hover { background:#1b5e20; }
+
+.card {
+  background: rgba(0,0,0,0.7);  /* fundo escuro translúcido */
+  padding: 20px;
+  border-radius: 12px;
+  margin: 20px 0;
+  color: #fff;
+  font-size: 1.2rem;           /* 🔹 fonte maior para melhor leitura */
+  line-height: 1.6;
+}
+
+.card h3 {
+  margin-top: 0;
+  font-size: 1.6rem;
+  color: #fff;
+}
+
+.card ul {
+  list-style: disc inside;
+  margin: 10px 0 0 0;
+}
+
+.back-center {
+  text-align: center;
+}
+
+.btn-voltar {
+  display: inline-block;
+  padding: 14px 28px;
+  background: #228B22;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 1.4rem;
+  transition: background 0.3s;
+}
+.btn-voltar:hover {
+  background: #1e7b1e;
+}

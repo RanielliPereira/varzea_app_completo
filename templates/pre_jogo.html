@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="pre-jogo-box">
+    <h1>💡 Dicas Pré-Jogo</h1>
+    <ul>
+        {% for dica in dicas %}
+          <li>{{ dica }}</li>
+        {% endfor %}
+    </ul>
+
+    <a href="{{ url_for('dashboard') }}" class="btn-voltar">⬅️ Voltar ao Menu</a>
+</div>
+{% endblock %}

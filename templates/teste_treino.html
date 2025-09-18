@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>Treinos</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+    }
+    .content {
+      max-width: 800px;
+      margin: 30px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: #fafafa;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 12px 0;
+      border: 1px solid #ddd;
+    }
+    .card h3 {
+      margin-top: 0;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    a.voltar {
+      display: inline-block;
+      margin-top: 20px;
+      text-decoration: none;
+      background: #444;
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 6px;
+    }
+    /* Botões de check-in */
+    .btn-checkin {
+      margin-top: 10px;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      color: white;
+      background: #2e7d32; /* verde gramado */
+    }
+    .btn-checkin.feito {
+      background: #c62828; /* vermelho */
+    }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <h2> Cronograma de Treinos </h2>
+
+    {% for dia,itens in treinos %}
+      <div class="card">
+        <h3>{{ dia }}</h3>
+        <ul>
+          {% for it in itens %}
+            <li>{{ it }}</li>
+          {% endfor %}
+        </ul>
+
+        <!-- Botão de check-in -->
+        <form>
+        </form>
+      </div>
+    {% endfor %}
+
+    <a class="voltar" href="/dashboard">← Voltar</a>
+  </div>
+  
+  <a href="{{ url_for('treino_page', treino_id=1) }}">Ir para Treino 1</a>
+  
+</body>
+</html>

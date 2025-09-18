@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>Evolução de Peso</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h2>Gráfico de Peso Diário</h2>
+  <canvas id="pesoChart"></canvas>
+
+  <script>
+    const ctx = document.getElementById('pesoChart').getContext('2d');
+    const pesoChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: {{ labels|tojson }},
+        datasets: [{
+          label: 'Peso (kg)',
+          data: {{ pesos|tojson }},
+          borderColor: 'rgba(75, 192, 192, 1)',
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          tension: 0.3,
+          fill: true,
+          pointRadius: 4
+        }]
+      },
+      options: {
+        scales: {
+          x: {
+            title: { display: true, text: 'Data/Hora' }
+          },
+          y: {
+            title: { display: true, text: 'Kg' },
+            beginAtZero: false
+          }
+        }
+      }
+    });
+  </script>
+  
+  <a href="{{ url_for('perfil') }}" class="btn-voltar">← Voltar</a>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>Perfil</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <h2>Perfil</h2>
+  <form method="POST">
+    <label>Idade:</label>
+    <input type="text" name="idade" value="{{ prof.age if prof else '' }}">
+    <label>Altura (m):</label>
+    <input type="text" name="altura" value="{{ prof.height_m if prof else '' }}">
+    <label>Peso (kg):</label>
+    <input type="text" name="peso" value="{{ prof.weight_kg if prof else '' }}">
+    <button type="submit">Salvar e Calcular IMC</button>
+  </form>
+
+  {% if imc is not none and imc > 0 %}
+    <div class="resultado-box 
+        {% if faixa == 'Abaixo do peso' %}baixo{% endif %}
+        {% if faixa == 'Peso ideal' %}ideal{% endif %}
+        {% if faixa == 'Sobrepeso' %}sobrepeso{% endif %}
+        {% if faixa == 'Obesidade' %}obesidade{% endif %}
+    ">
+      <h3>📊 Resultado do IMC</h3>
+      <p><strong>IMC:</strong> {{ imc }} ({{ faixa }})</p>
+      <p><strong>Peso ideal:</strong> entre {{ peso_ideal[0] }} kg e {{ peso_ideal[1] }} kg</p>
+      <p><em>{{ motivacao }}</em></p>
+    </div>
+
+    <p style="text-align:center; margin-top:20px;">
+      <a href="/dashboard" class="btn-voltar">← Voltar ao Dashboard</a>
+    </p>
+    <hr>
+
+    <h3>📅 Registrar peso diário</h3>
+    <form action="{{ url_for('peso_diario') }}" method="POST" class="peso-form">
+      <label for="peso_diario">Peso de hoje (kg):</label>
+      <input type="number" step="0.1" name="peso_diario" id="peso_diario" required>
+      <button type="submit" class="btn">Salvar peso</button>
+    </form>
+
+    {% if pesos %}
+      <h4>Histórico</h4>
+      <ul>
+        {% for row in pesos %}
+          <li>{{ row.log_date }} – {{ row.weight_kg }} kg</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endif %}
+  
+  <a href="{{ url_for('peso_grafico') }}" class="btn-grafico">
+    📊 Ver Gráfico
+</a>
+
+</body>
+</html>

@@ -1,0 +1,745 @@
+
+import os, sqlite3
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask_mail import Mail, Message
+from itsdangerous import URLSafeTimedSerializer
+from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
+
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(APP_DIR, "varzea.db")
+
+app = Flask(__name__)
+app.secret_key = os.environ.get("APP_SECRET", "troca_esse_segredo")
+
+# Mail config via env vars
+app.config["MAIL_SERVER"] = os.environ.get("SMTP_HOST", "smtp.gmail.com")
+app.config["MAIL_PORT"] = int(os.environ.get("SMTP_PORT", 587))
+app.config["MAIL_USE_TLS"] = True
+app.config["MAIL_USERNAME"] = os.environ.get("SMTP_USER", "")
+app.config["MAIL_PASSWORD"] = os.environ.get("SMTP_PASS", "")
+app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("SMTP_FROM", app.config["MAIL_USERNAME"] or "no-reply@example.com")
+
+mail = Mail(app)
+serializer = URLSafeTimedSerializer(app.secret_key)
+
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db():
+    conn = get_db()
+    cur = conn.cursor()
+
+    # Tabela de usuários
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS users(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            email TEXT UNIQUE,
+            password_hash TEXT
+        )
+    """)
+
+    # Perfil do usuário
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS profile(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER UNIQUE,
+            age INTEGER,
+            height_m REAL,
+            weight_kg REAL,
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )
+    """)
+
+    # Check-ins de treinos
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS checkins(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            treino TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )
+    """)
+
+    # Histórico de peso diário
+    # ⚠️  A coluna 'log_date' é usada no template, então criamos com esse nome
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS weight_log(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            weight_kg REAL NOT NULL,
+            log_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+def send_reset_email(to_email):
+    if not app.config["MAIL_USERNAME"] or not app.config["MAIL_PASSWORD"]:
+        print("[WARN] SMTP not configured. Cannot send email.")
+        return False, None
+    token = serializer.dumps(to_email, salt="reset-salt")
+    link = url_for("reset", token=token, _external=True)
+    html = f"<p>Você pediu redefinir a senha. Clique no link abaixo (expira em 1h):</p><p><a href='{link}'>{link}</a></p>"
+    try:
+        msg = Message("Redefinir senha - Na Raça", recipients=[to_email], html=html)
+        mail.send(msg)
+        return True, link
+    except Exception as e:
+        print("Mail error:", e)
+        return False, None
+
+from functools import wraps
+def login_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not session.get("uid"):
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return wrapper
+
+MOTIVACOES = [
+    "Quem corre na raça nunca perde a batalha.",
+    "Constância vence talento quando o talento não treina.",
+    "Foco, força e fé no gramado.",
+    "Várzea é coração: joga simples, joga sério."
+]
+
+TREINOS = [
+    {
+        "id": 1,
+        "titulo": "Dia 1 – Base + Condicionamento",
+        "exercicios": [
+            "Corda: 4x1min (30s descanso)",
+            "Circuito 2 voltas: 12 agachamentos, 10 flexões, 20s prancha",
+            "5 sprints de 10m (força total)",
+            "Extra abdômen: 3x15 abdominal bicicleta"
+        ]
+    },
+    {
+        "id": 2,
+        "titulo": "Dia 2 – Força",
+        "exercicios": [
+            "3 séries com galão: 12 agachamento, 12 avanço (cada perna), 12 remada curvada",
+            "3x8 burpees",
+            "3x25s prancha",
+            "Extra abdômen: 3x15 abdominal infra"
+        ]
+    },
+    {
+        "id": 3,
+        "titulo": "Dia 3 – Explosão",
+        "exercicios": [
+            "8 sprints curtos de 10m (descanso 40s)",
+            "3x12 Skater Jump (saltos laterais)",
+            "3x10 agachamento com salto",
+            "Extra abdômen: 3x20s prancha lateral (cada lado)"
+        ]
+    },
+    {
+        "id": 4,
+        "titulo": "Dia 4 – Descanso ativo",
+        "exercicios": [
+            "Caminhada leve + alongamento/mobilidade"
+        ]
+    },
+    {
+        "id": 5,
+        "titulo": "Dia 5 – Resistência + Força",
+        "exercicios": [
+            "Corda 5x1min",
+            "3 séries: 12 agachamento com galão",
+            "10 avanço cada perna",
+            "8 flexões rápidas",
+            "3x30s prancha",
+            "Extra abdômen: 3x12 abdominal bicicleta"
+        ]
+    },
+    {
+        "id": 6,
+        "titulo": "Dia 6 – Explosão curta",
+        "exercicios": [
+            "10 sprints de 10m (máxima explosão)",
+            "3x10 burpees",
+            "3x12 Skater Jump",
+            "Extra abdômen: 3x15 abdominal infra"
+        ]
+    },
+    {
+        "id": 7,
+        "titulo": "Dia 7 – Descanso ativo",
+        "exercicios": [
+            "Caminhada leve ou alongamento"
+        ]
+    },
+    {
+        "id": 8,
+        "titulo": "Dia 8 – Força + Explosão",
+        "exercicios": [
+            "Corda 3x1min",
+            "3 séries: 12 agachamento com galão",
+            "12 remada curvada",
+            "10 flexão rápida",
+            "6 sprints de 10m",
+            "Extra abdômen: 3x20s prancha lateral (cada lado)"
+        ]
+    },
+    {
+        "id": 9,
+        "titulo": "Dia 9 – Condicionamento",
+        "exercicios": [
+            "Corda 5x1min",
+            "Circuito 2 voltas: 12 agachamento",
+            "10 burpees, 25s prancha",
+            "4 sprints de 15m",
+            "Extra abdômen: 3x12 abdominal bicicleta"
+        ]
+    },
+    {
+        "id": 10,
+        "titulo": "Dia 10 – Leve / Manutenção",
+        "exercicios": [
+            "Corda 3x1min (leve)",
+            "2 séries: 10 agachamento + 8 flexões + 20s prancha",
+            "Alongamento"
+        ]
+    },
+    {
+        "id": 11,
+        "titulo": "Dia 11 – Ativação curta",
+        "exercicios": [
+            "3 sprints curtos de 10m (70% esforço)",
+            "Corda 2x1min leve",
+            "Alongamento dinâmico"
+        ]
+    },
+    {
+        "id": 12,
+        "titulo": "Dia 12 – Descanso total",
+        "exercicios": [
+            "Apenas alongamento leve"
+        ]
+    },
+    {
+        "id": 13,
+        "titulo": "Dia de jogo",
+        "exercicios": [
+            "Aquecimento: 5 min corrida leve ou corda",
+            "Alongamento dinâmico (quadril, posterior, adutor)",
+            "3 sprints progressivos (leve → médio → forte)"
+        ]
+    }
+]
+# Treino Intermediário: 21 dias (estrutura para integrar ao app)
+TREINO_21_DIAS = [
+    ("Semana 1 - Dia 1", [
+        "Aquecimento: corrida leve + mobilidade de quadril (5 min)",
+        "3x12 Agachamento com salto",
+        "3x12 Flexões",
+        "Corrida estacionária: 6 séries (30s forte / 15s leve)",
+        "3x30s Prancha",
+        "Alongamento dinâmico (3 min)"
+    ]),
+    ("Semana 1 - Dia 2", [
+        "Aquecimento: pular corda 3 min + mobilidade",
+        "4x10 Avanços (cada perna)",
+        "3x15 Abdominal bicicleta",
+        "Circuito: 3 voltas — 12 agachamentos + 10 flexões + 20s prancha",
+        "Alongamento leve"
+    ]),
+    ("Semana 1 - Dia 3", [
+        "Aquecimento: polichinelo 3 min",
+        "3x12 Skater Jump",
+        "3x12 Burpees (intensidade moderada)",
+        "Sprint curto: 6x10m (descanso 40s)",
+        "Alongamento e mobilidade"
+    ]),
+    ("Semana 1 - Dia 4 (Descanso ativo)", [
+        "Caminhada leve 25-35 min ou yoga curta",
+        "Mobilidade de quadril/tornozelo 10 min"
+    ]),
+    ("Semana 1 - Dia 5", [
+        "Aquecimento leve 5 min",
+        "4x12 Agachamento com carga improvisada (galão/mochila)",
+        "3x12 Remada curvada com galão",
+        "3x30s Prancha",
+        "5 sprints de 10m (força total)"
+    ]),
+    ("Semana 1 - Dia 6", [
+        "Explosão: 8 sprints de 10m (descanso 40s)",
+        "3x12 Agachamento com salto",
+        "3x12 Skater Jump",
+        "Core: 3x20s prancha lateral cada lado"
+    ]),
+    ("Semana 1 - Dia 7 (Descanso ativo)", [
+        "Caminhada leve ou alongamento prolongado",
+        "Foque em sono e hidratação"
+    ]),
+
+    ("Semana 2 - Dia 8", [
+        "Aquecimento: skipping + mobilidade (5 min)",
+        "3x10 Agachamento afundo com salto (cada perna)",
+        "3x10 Flexão tocando ombro",
+        "Sprint curto no lugar: 8 séries (20s / 20s)",
+        "Prancha lateral 3x20s cada lado"
+    ]),
+    ("Semana 2 - Dia 9", [
+        "Circuito HIIT (4 voltas): 30s ON / 15s OFF",
+        "- Burpees 30s",
+        "- Agachamento com salto 30s",
+        "- Mountain climbers 30s",
+        "Core: 3x15 abdominal infra"
+    ]),
+    ("Semana 2 - Day 10", [
+        "Aquecimento: corda 5 min",
+        "3 séries: 12 agachamento com galão, 10 avanço cada perna, 8 flexões rápidas",
+        "6 sprints de 10m",
+        "Alongamento"
+    ]),
+    ("Semana 2 - Dia 11", [
+        "Força explosiva: 5x1min corda (30s descanso)",
+        "3x10 Burpees em ritmo forte",
+        "Pliometria leve: 3x8 saltos horizontais",
+        "Core: prancha 3x40s"
+    ]),
+    ("Semana 2 - Dia 12 (Descanso ativo)", [
+        "Caminhada leve + mobilidade (30 min)",
+        "Liberação miofascial (se puder) e rotação de quadril"
+    ]),
+    ("Semana 2 - Dia 13", [
+        "Treino de velocidade: 10 sprints de 10m (máxima explosão) com 40s descanso",
+        "3x12 Skater Jump",
+        "3x15 abdominal bicicleta"
+    ]),
+    ("Semana 2 - Dia 14 (Pré-jogo simulado)", [
+        "Treino em circuito: 4 voltas — 10 burpees + 15 agachamentos com salto + 30s prancha",
+        "5 sprints de 15m (progressivo)",
+        "Alongamento dinâmico"
+    ]),
+
+    ("Semana 3 - Dia 15", [
+        "Aquecimento: corrida leve 5 min + mobilidade completa",
+        "Burpee + Sprint combo: 4 séries (6 burpees + 20m sprint)",
+        "3x12 Agachamento com salto",
+        "Core: prancha com elevação de perna 3x10 cada lado"
+    ]),
+    ("Semana 3 - Dia 16", [
+        "Treino intervalado longo: 8x100m (ritmo forte) com caminhada de 60-90s",
+        "Pós: 10 min de alongamento"
+    ]),
+    ("Semana 3 - Dia 17", [
+        "HIIT curto e intenso: 10 séries — 30s ON / 15s OFF (escolha 2 exercícios por série: burpee, agach salto, mountain)",
+        "Core: 4x30s prancha"
+    ]),
+    ("Semana 3 - Dia 18 (Descanso ativo)", [
+        "Recuperação: caminhada + foam roll / alongamento 20-30 min",
+        "Hidratação e sono"
+    ]),
+    ("Semana 3 - Dia 19", [
+        "Simulação de jogo: 20 min contínuo em ritmo variado (trocar 3min forte / 2min leve)",
+        "Tiros curtos: 6x20m",
+        "Core e mobilidade"
+    ]),
+    ("Semana 3 - Dia 20 (Preparo para jogo)", [
+        "Treino leve: corda 3x1min + 3 sprints progressivos 50-70-90%",
+        "Alongamento dinâmico - foco em quadril e posterior"
+    ]),
+    ("Semana 3 - Dia 21 (Dia do teste/simulação)", [
+        "Aquecimento completo (10 min)",
+        "Jogo simulado ou circuito longo: 3 voltas intensas do circuito completo",
+        "Recuperação: hidratação + refeição com carboidrato + proteína"
+    ]),
+]
+
+CARDAPIO = [
+("Café da manhã", ["Ovos mexidos + pão integral", "Banana + aveia", "Café/chá sem açúcar"]),
+("Almoço", ["Arroz + feijão", "Frango grelhado ou ovos", "Salada/legumes"]),
+("Lanche", ["Fruta (banana/maçã)", "Amendoim torrado (pequena porção)"]),
+("Jantar", ["Arroz ou batata", "Proteína (frango/ovo)", "Legumes refogados"]),
+("Hidratação", ["2–3L de água por dia", "Evitar refrigerante e álcool pré-jogo"])
+]
+
+SUBS = [
+("Proteínas", "Frango → ovos → sardinha enlatada"),
+("Carboidratos", "Arroz → batata → mandioca"),
+("Legumes", "Cenoura → abobrinha → brócolis"),
+("Extras", "Aveia, banana, feijão, tomate, cebola, alho")
+]
+
+def table_exists(conn, table_name):
+    """Retorna True se a tabela existir no banco SQLite."""
+    cur = conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+        (table_name,)
+    )
+    return cur.fetchone() is not None
+
+@app.route("/")
+def home():
+    if session.get("uid"):
+        return redirect(url_for("dashboard"))
+    return redirect(url_for("login"))
+
+@app.route("/register", methods=["GET","POST"])
+def register():
+    if request.method == "POST":
+        name = request.form.get("name","").strip()
+        email = request.form.get("email","").strip().lower()
+        password = request.form.get("password","")
+        if not (name and email and password):
+            flash("Preencha todos os campos.", "error")
+            return render_template("register.html")
+        pw_hash = generate_password_hash(password)
+        try:
+            conn = get_db()
+            conn.execute("INSERT INTO users(name,email,password_hash) VALUES (?,?,?)",(name,email,pw_hash))
+            conn.commit()
+            conn.close()
+            flash("Conta criada. Faça login.", "success")
+            return redirect(url_for("login"))
+        except sqlite3.IntegrityError:
+            flash("E-mail já cadastrado.", "error")
+    return render_template("register.html")
+
+@app.route("/login", methods=["GET","POST"])
+def login():
+    if request.method == "POST":
+        email = request.form.get("email","").strip().lower()
+        password = request.form.get("password","")
+        conn = get_db()
+        user = conn.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
+        conn.close()
+        if user and check_password_hash(user["password_hash"], password):
+            session["uid"] = user["id"]
+            session["name"] = user["name"]
+            session["email"] = user["email"]
+            return redirect(url_for("dashboard"))
+        flash("Credenciais inválidas.", "error")
+    return render_template("login.html")
+
+@app.route("/forgot", methods=["GET","POST"])
+def forgot():
+    if request.method == "POST":
+        email = request.form.get("email","").strip().lower()
+        conn = get_db()
+        user = conn.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
+        conn.close()
+        if user:
+            ok, link = send_reset_email(email)
+            if ok:
+                flash("Enviamos link para seu e-mail.", "success")
+            else:
+                flash("Não foi possível enviar e-mail. Veja console e configure SMTP.", "error")
+        else:
+            flash("Se o e-mail existir, enviaremos um link.", "info")
+    return render_template("forgot.html")
+
+@app.route("/reset/<token>", methods=["GET","POST"])
+def reset(token):
+    try:
+        email = serializer.loads(token, salt="reset-salt", max_age=3600)
+    except Exception:
+        return "Link inválido ou expirado."
+    if request.method == "POST":
+        new_pw = request.form.get("password","")
+        if not new_pw:
+            flash("Digite a nova senha.", "error")
+        else:
+            conn = get_db()
+            conn.execute("UPDATE users SET password_hash=? WHERE email=?", (generate_password_hash(new_pw), email))
+            conn.commit()
+            conn.close()
+            flash("Senha alterada. Faça login.", "success")
+            return redirect(url_for("login"))
+    return render_template("reset.html")
+@app.route("/dashboard")
+@login_required
+def dashboard():
+    import random
+    frase = random.choice(MOTIVACOES)
+    checkins_count = 0
+    uid = session.get("uid")
+    if uid:
+        conn = get_db()
+        row = conn.execute("SELECT COUNT(*) as c FROM checkins WHERE user_id=?", (uid,)).fetchone()
+        conn.close()
+        checkins_count = row["c"] if row else 0
+    return render_template("dashboard.html", nome=session.get("name","Jogador"), frase=frase, checkins_count=checkins_count)
+
+#@app.route("/treinos")
+#@login_required
+#def treinos_view():
+   # user_id = session["uid"]
+    #db = get_db()
+    #cur = db.execute("SELECT treino FROM checkins WHERE user_id = ?", (user_id,))
+    #feitos = [row[0] for row in cur.fetchall()]
+    #db.close()
+    #return render_template("treino.html", treinos=TREINOS, feitos=feitos)
+
+    
+@app.route("/treinos_intermediario")
+@login_required
+def treinos_intermediario():
+    return render_template("treinos_intermediario.html", treinos=TREINO_21_DIAS)
+    
+@app.route("/checkin", methods=["POST"])
+@login_required
+def checkin():
+    treino = request.form.get("treino")
+    if not treino:
+        flash("Treino não informado.", "error")
+        return redirect(request.referrer or url_for("treinos_view"))
+
+    user_id = session.get("uid")
+    if not user_id:
+        flash("Faça login para registrar check-in.", "error")
+        return redirect(url_for("login"))
+
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("INSERT INTO checkins (user_id, treino) VALUES (?, ?)", (user_id, treino))
+    db.commit()
+    db.close()
+
+    flash(f"✅ Check-in feito para {treino}!", "success")
+    return redirect(request.referrer or url_for("treinos_view"))
+
+
+@app.route("/meus_checkins")
+@login_required
+def meus_checkins():
+    user_id = session.get("uid")
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT treino, created_at FROM checkins WHERE user_id=? ORDER BY created_at DESC", (user_id,))
+    registros = cur.fetchall()
+    db.close()
+    return render_template("meus_checkins.html", checkins=registros)
+
+@app.route("/dieta")
+@login_required
+def dieta_view():
+    return render_template("dieta.html", cardapio=CARDAPIO, subs=SUBS)
+
+@app.route("/recuperacao")
+@login_required
+def recuperacao_view():
+    dicas = [
+        "Sono: 7–9h por noite.",
+        "Pós-treino: alongar 10–15 min e hidratar.",
+        "Dia antes do jogo: treinar leve + carboidrato base.",
+        "Pós-jogo: água + fruta; 1h depois, proteína magra + carboidrato + legumes."
+    ]
+    return render_template("recuperacao.html", dicas=dicas)
+ 
+@app.route("/perfil", methods=["GET", "POST"])
+@login_required
+def perfil():
+    conn = get_db()
+    prof = conn.execute(
+        "SELECT * FROM profile WHERE user_id=?", (session["uid"],)
+    ).fetchone()
+
+    if request.method == "POST":
+        idade = request.form.get("idade", "").strip()
+        altura_raw = request.form.get("altura", "").strip()
+        peso_raw = request.form.get("peso", "").strip()
+
+        # normaliza vírgula -> ponto
+        altura_norm = altura_raw.replace(",", ".") if altura_raw else ""
+        peso_norm = peso_raw.replace(",", ".") if peso_raw else ""
+
+        altura_val = None
+        peso_val = None
+        erro_parse = False
+
+        try:
+            if altura_norm:
+                altura_val = float(altura_norm)
+            if peso_norm:
+                peso_val = float(peso_norm)
+        except ValueError:
+            erro_parse = True
+            flash("Altura ou peso inválidos. Use 1.75 e 72.5 (ponto ou vírgula).", "error")
+
+        if not erro_parse:
+            if prof:
+                conn.execute(
+                    "UPDATE profile SET age=?, height_m=?, weight_kg=? WHERE user_id=?",
+                    (idade if idade else None, altura_val, peso_val, session["uid"])
+                )
+            else:
+                conn.execute(
+                    "INSERT INTO profile(user_id, age, height_m, weight_kg) VALUES (?,?,?,?)",
+                    (session["uid"], idade if idade else None, altura_val, peso_val)
+                )
+            conn.commit()
+            prof = conn.execute(
+                "SELECT * FROM profile WHERE user_id=?", (session["uid"],)
+            ).fetchone()
+
+    # ==== cálculo IMC ====
+    imc = faixa = peso_ideal = motivacao = None
+    try:
+        if prof and prof["height_m"] and prof["weight_kg"]:
+            h = float(str(prof["height_m"]).replace(",", "."))
+            w = float(str(prof["weight_kg"]).replace(",", "."))
+            if h > 0 and w > 0:
+                imc = round(w / (h * h), 1)
+                min_w = 18.5 * (h * h)
+                max_w = 24.9 * (h * h)
+                peso_ideal = (round(min_w, 1), round(max_w, 1))
+
+                if imc < 18.5:
+                    faixa = "Abaixo do peso"
+                    motivacao = "⚡ Está leve demais! Bora ganhar massa com treinos e alimentação certa."
+                elif imc <= 24.9:
+                    faixa = "Peso ideal"
+                    motivacao = "✅ Tá no ponto, mantenha a disciplina que o jogo é seu!"
+                elif imc <= 29.9:
+                    faixa = "Sobrepeso"
+                    motivacao = "⚽ Força! Com treino e foco você vai chegar no shape ideal rapidinho."
+                else:
+                    faixa = "Obesidade"
+                    motivacao = "🔥 Hora de dar o gás! Cada treino é um passo rumo à evolução."
+    except Exception as e:
+        print("Erro ao calcular IMC:", e)
+        flash("Não foi possível calcular o IMC com os valores fornecidos.", "error")
+
+    # Histórico de peso diário (opcional, só se você já criou a tabela weight_log)
+    pesos = conn.execute(
+        "SELECT weight_kg, log_date FROM weight_log WHERE user_id=? ORDER BY log_date DESC",
+        (session["uid"],)
+    ).fetchall() if table_exists(conn, "weight_log") else []
+
+    conn.close()
+
+    print("DEBUG IMC:", imc, faixa, motivacao)  # para depuração
+
+    return render_template(
+        "perfil.html",
+        prof=prof,
+        imc=imc,
+        faixa=faixa,
+        peso_ideal=peso_ideal,
+        motivacao=motivacao,
+        pesos=pesos
+    )
+
+@app.route("/peso_diario", methods=["POST"])
+def peso_diario():
+    user_id = session.get("uid")
+    if not user_id:
+        flash("Faça login para registrar seu peso.")
+        return redirect(url_for("login"))
+
+    peso_raw = request.form.get("peso_diario")
+    if not peso_raw:
+        flash("Informe o peso.", "error")
+        return redirect(url_for("perfil"))
+
+    try:
+        p = float(peso_raw.replace(",", "."))
+    except ValueError:
+        flash("Peso inválido.", "error")
+        return redirect(url_for("perfil"))
+
+    # pega horário local e formata YYYY-MM-DD HH:MM:SS (compatível com SQLite)
+    now_local = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    with sqlite3.connect(DB_PATH) as conn:
+        cur = conn.cursor()
+        cur.execute(
+            "INSERT INTO weight_log (user_id, weight_kg, log_date) VALUES (?, ?, ?)",
+            (user_id, p, now_local)
+        )
+        conn.commit()
+
+    flash("Peso salvo com sucesso!")
+    return redirect(url_for("perfil"))
+    
+@app.route("/peso_grafico")
+def peso_grafico():
+    user_id = session.get("uid")
+    if not user_id:
+        return redirect(url_for("login"))
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT weight_kg, created_at
+        FROM weight_log
+        WHERE user_id = ?
+        ORDER BY created_at
+    """, (user_id,))
+    data = cur.fetchall()
+    conn.close()
+
+    # Converte em duas listas: datas e pesos
+    labels = [row["created_at"] for row in data]
+    pesos = [row["weight_kg"] for row in data]
+
+    return render_template("peso_grafico.html", labels=labels, pesos=pesos)
+@app.route("/treino/<int:treino_id>", methods=["GET", "POST"])
+@login_required
+def treino_individual(treino_id):
+    if request.method == "POST":
+        # salva check-in
+        with get_db() as conn:
+            conn.execute(
+                "INSERT INTO checkins (user_id, treino) VALUES (?, ?)",
+                (session["uid"], f"treino_{treino_id}")
+            )
+            conn.commit()
+        flash("Check-in salvo!")
+        return redirect(url_for("treino_individual", treino_id=treino_id))
+
+    # verifica se já foi feito
+    with get_db() as conn:
+        feito = conn.execute(
+            "SELECT 1 FROM checkins WHERE user_id=? AND treino=?",
+            (session["uid"], f"treino_{treino_id}")
+        ).fetchone() is not None
+
+    # pega o treino pelo id
+    treino = next((t for t in TREINOS if t["id"] == treino_id), None)
+    if not treino:
+        abort(404)
+
+    anterior = treino_id - 1 if treino_id > 1 else None
+    proximo = treino_id + 1 if treino_id < len(TREINOS) else None
+
+    return render_template(
+        "treino_individual.html",
+        treino=treino,
+        anterior=anterior,
+        proximo=proximo,
+        feito=feito
+    )
+    
+@app.route("/pre_jogo")
+@login_required
+def pre_jogo():
+    dicas = [
+        "💧 Hidratação: beba água ao longo do dia anterior e no dia do jogo.",
+        "🥗 Alimentação: priorize carboidratos complexos (arroz, batata, macarrão integral) e proteínas leves.",
+        "😴 Sono: durma de 7 a 9 horas na noite anterior.",
+        "🧘 Alongamento leve e mobilidade, sem exercícios pesados.",
+        "⚽ Revisar mentalmente jogadas e posicionamento em campo.",
+        "🕑 No dia do jogo: faça um café da manhã/lanche leve 3 h antes e um aquecimento gradual."
+    ]
+    return render_template("pre_jogo.html", dicas=dicas)
+    
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)

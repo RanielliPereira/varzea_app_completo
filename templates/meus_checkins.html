@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>Meus Check-ins</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: url("/static/login_bg.png") no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
+      padding: 0;
+      color: #fff;
+    }
+    .container {
+      max-width: 800px;
+      margin: 60px auto;
+      background: rgba(0, 100, 0, 0.9); /* verde tipo gramado */
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 0 12px rgba(0,0,0,0.4);
+    }
+    h2 {
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    table th, table td {
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+      text-align: center;
+    }
+    table th {
+      background: #004d00;
+      color: #fff;
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 16px;
+      margin-top: 20px;
+      background: #222;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+    .btn:hover {
+      background: #444;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>✅ Meus Check-ins</h2>
+
+    {% if checkins %}
+      <table>
+        <tr>
+          <th>Treino</th>
+          <th>Data</th>
+        </tr>
+        {% for treino, created_at in checkins %}
+        <tr>
+          <td>{{ treino }}</td>
+          <td>{{ created_at }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <p>Nenhum check-in registrado ainda.</p>
+    {% endif %}
+
+    <a class="btn" href="/dashboard">← Voltar</a>
+  </div>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>Treino Intermediário - 21 dias</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .card { 
+      background:#fff; 
+      padding:12px; 
+      border-radius:8px; 
+      margin:10px 0; 
+      color:#111; 
+    }
+    .content { 
+      max-width:900px; 
+      margin:20px auto; 
+      font-family:Arial; 
+      padding:10px; 
+    }
+    h2 { 
+      text-align:center; 
+    }
+    .checkin-btn {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 8px 14px;
+      background-color: #2e7d32; /* verde estilo gramado */
+      color: white;
+      border: none;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .checkin-btn:hover {
+      background-color: #1b5e20;
+    }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <h2>Treino Intermediário — 21 dias</h2>
+    <p style="text-align:center">Objetivo: explosão, resistência e preparação para jogo.</p>
+    {% for dia, itens in treinos %}
+      <div class="card">
+        <h3>{{ dia }}</h3>
+        <ul>
+          {% for it in itens %}
+            <li>{{ it }}</li>
+          {% endfor %}
+        </ul>
+        <!-- Botão de check-in -->
+<form action="/checkin" method="post">
+  <input type="hidden" name="treino" value="{{ dia }}">
+  <button type="submit" class="checkin-btn">✅ Check-in</button>
+</form>
+<p><a href="/meus_checkins">📋 Ver meus check-ins</a></p>
+      </div>
+    {% endfor %}
+    <p><a href="/dashboard">← Voltar</a></p>
+  </div>
+</body>
+</html>

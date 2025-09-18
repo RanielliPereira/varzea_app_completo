@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Dashboard - NA RAÇA</title>
+<link rel="stylesheet" href="/static/style.css">
+<style>
+/* --- FUNDO --- */
+body.dashboard-page {
+    font-family: Arial, sans-serif;
+    background: url("/static/inicial.png") no-repeat center center fixed;
+    background-size: cover;
+    color: white;
+    margin: 0;
+    padding: 0;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* --- CAIXA CENTRAL --- */
+.dash-box {
+    background: rgba(0, 0, 0, 0.7);
+    padding: 6vh 6vw;                 /* mais respiro */
+    border-radius: 24px;
+    text-align: center;
+    max-width: 90%;                   /* ocupa quase a tela no mobile */
+    box-shadow: 0 10px 28px rgba(0,0,0,0.7);
+}
+
+/* --- TÍTULO PRINCIPAL --- */
+.dash-box h1 {
+    font-size: 6vw;                   /* escala com a largura do dispositivo */
+    min-font-size: 42px;              /* nunca menor que 42px */
+    color: #2ecc40;
+    margin-bottom: 2vh;
+    font-weight: 900;
+    text-shadow: 3px 3px 12px rgba(0,0,0,0.8);
+    letter-spacing: 1px;
+}
+
+/* --- SAUDAÇÃO --- */
+.dash-box h2 {
+    font-size: 4.5vw;
+    min-font-size: 30px;
+    margin-bottom: 2vh;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+}
+
+/* --- FRASE MOTIVACIONAL --- */
+.quote {
+    font-style: italic;
+    font-size: 3.8vw;
+    min-font-size: 24px;
+    margin-bottom: 4vh;
+    line-height: 1.4;
+    text-shadow: 2px 2px 6px rgba(0,0,0,0.6);
+}
+
+/* --- BOTÃO DESTQUE --- */
+.btn {
+    display: inline-block;
+    background: #228B22;
+    color: white;
+    padding: 20px 40px;
+    margin: 20px 0;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 4.5vw;
+    min-font-size: 26px;
+    border-radius: 14px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.7);
+    transition: 0.3s;
+}
+.btn:hover {
+    background: #1e7a1e;
+    transform: scale(1.07);
+}
+
+/* --- MENU DE ITENS --- */
+.menu {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    align-items: center;
+}
+
+.item {
+    display: block;
+    width: 100%;
+    background: #228B22;
+    color: white;
+    padding: 18px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 4vw;
+    min-font-size: 22px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 5px 12px rgba(0,0,0,0.6);
+    transition: 0.3s;
+}
+.item:hover {
+    background: #1e7a1e;
+    transform: scale(1.05);
+}
+</style>
+</head>
+<body class="dashboard-page">
+    <div class="dash-box">
+        <h1 style="
+   font-size: clamp(70px,16vw,110px);
+   font-weight:900;
+   letter-spacing:2px;
+   text-shadow:4px 4px 14px rgba(0,0,0,0.8);
+   color:#2ecc40;
+">
+   NA RAÇA
+</h1>
+         <p class="quote">{{ frase }}</p>
+        <h2>E aí jogador, {{ nome }} 👊</h2>
+       
+
+        <!-- Botão principal -->
+        <a class="btn" href="{{ url_for('treino_individual', treino_id=1) }}">⚽ Treinar Agora</a>
+
+        <!-- Menu -->
+        <div class="menu">
+            <a class="item" href="/pre_jogo">📋 Pré-jogo</a>
+            <a class="item" href="/recuperacao">💆 Pós-jogo</a>
+            <a class="item" href="/dieta">🥗 Dieta</a>
+            <a class="item" href="/perfil">📊 Peso Ideal</a>
+            <a class="item" href="/treinos_intermediario">🔥 Treinos (21 dias)</a>
+            <a class="item" href="/logout">🚪 Sair</a>
+        </div>
+    </div>
+</body>
+</html>
