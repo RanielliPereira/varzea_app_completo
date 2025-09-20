@@ -1,0 +1,1 @@
+from varzea_trainer_flask import app
