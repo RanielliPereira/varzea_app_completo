@@ -4,7 +4,11 @@ from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+from zoneinfo import ZoneInfo   # <— importa o fuso horário
 import time
+
+tz = pytz.timezone("America/Sao_Paulo")
+agora = datetime.now(tz)
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(APP_DIR, "varzea.db")
@@ -651,7 +655,7 @@ def peso_diario():
         return redirect(url_for("perfil"))
 
     # pega horário local e formata YYYY-MM-DD HH:MM:SS (compatível com SQLite)
-    now_local = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+now_local = datetime.now(ZoneInfo("America/Sao_Paulo")).strftime("%Y-%m-%d %H:%M:%S")
 
     with sqlite3.connect(DB_PATH) as conn:
         cur = conn.cursor()
@@ -686,6 +690,7 @@ def peso_grafico():
     pesos = [row["weight_kg"] for row in data]
 
     return render_template("peso_grafico.html", labels=labels, pesos=pesos)
+    
 @app.route("/treino/<int:treino_id>", methods=["GET", "POST"])
 @login_required
 def treino_individual(treino_id):
