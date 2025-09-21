@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NA RAÇA</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      font-family: Arial, sans-serif;
+
+      /* 🔹 coloca a imagem da capa como fundo */
+      background: url("/static/capa.png") center center / cover no-repeat fixed;
+      color: #fff;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
+    }
+
+    .spinner {
+      border: 8px solid rgba(255,255,255,0.2);
+      border-top: 8px solid #f1c40f;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+      margin-top: 20px;
+    }
+
+    @keyframes spin {
+      0% {transform: rotate(0deg);}
+      100% {transform: rotate(360deg);}
+    }
+  </style>
+</head>
+<body>
+  <h1>NA RAÇA</h1>
+  <p>Carregando seu treino...</p>
+  <div class="spinner"></div>
+
+  <script>
+    // Redireciona para a home depois de 3 segundos
+    setTimeout(function(){
+      window.location.href = "/home";
+    }, 3000);
+  </script>
+</body>
+</html>

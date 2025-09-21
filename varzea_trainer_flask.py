@@ -1,10 +1,10 @@
-
 import os, sqlite3
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+import time
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(APP_DIR, "varzea.db")
@@ -740,6 +740,15 @@ def pre_jogo():
 def logout():
     session.clear()
     return redirect(url_for("login"))
+    
+@app.route('/')
+def splash():
+    # Mostra a tela por 3 segundos e redireciona
+    return render_template('splash.html')
+
+@app.route('/home')
+def home():
+    return render_template('index.html')  # sua página principal
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
