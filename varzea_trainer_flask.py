@@ -6,7 +6,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from zoneinfo import ZoneInfo   # <— importa o fuso horário
 import time
+import pytz
 
+tz = pytz.timezone("America/Sao_Paulo")
+now_local = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(APP_DIR, "varzea.db")
