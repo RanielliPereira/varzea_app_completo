@@ -7,8 +7,6 @@ from datetime import datetime
 from zoneinfo import ZoneInfo   # <— importa o fuso horário
 import time
 
-tz = pytz.timezone("America/Sao_Paulo")
-agora = datetime.now(tz)
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(APP_DIR, "varzea.db")
@@ -384,6 +382,9 @@ def table_exists(conn, table_name):
     )
     return cur.fetchone() is not None
 
+def atingiu_peso_ideal(peso_atual, peso_min, peso_max):
+    return peso_min <= peso_atual <= peso_max
+    
 @app.route("/")
 def home():
     if session.get("uid"):
@@ -462,6 +463,8 @@ def reset(token):
             flash("Senha alterada. Faça login.", "success")
             return redirect(url_for("login"))
     return render_template("reset.html")
+    
+    
 @app.route("/dashboard")
 @login_required
 def dashboard():
@@ -541,7 +544,8 @@ def recuperacao_view():
         "Pós-jogo: água + fruta; 1h depois, proteína magra + carboidrato + legumes."
     ]
     return render_template("recuperacao.html", dicas=dicas)
- 
+    
+    
 @app.route("/perfil", methods=["GET", "POST"])
 @login_required
 def perfil():
@@ -590,6 +594,7 @@ def perfil():
 
     # ==== cálculo IMC ====
     imc = faixa = peso_ideal = motivacao = None
+    mensagem = None   # <- nova variável para o aviso
     try:
         if prof and prof["height_m"] and prof["weight_kg"]:
             h = float(str(prof["height_m"]).replace(",", "."))
@@ -612,19 +617,21 @@ def perfil():
                 else:
                     faixa = "Obesidade"
                     motivacao = "🔥 Hora de dar o gás! Cada treino é um passo rumo à evolução."
+
+                # ===== mensagem de peso ideal =====
+                if min_w <= w <= max_w:
+                    mensagem = "🎉 Parabéns! Você atingiu seu peso ideal."
     except Exception as e:
         print("Erro ao calcular IMC:", e)
         flash("Não foi possível calcular o IMC com os valores fornecidos.", "error")
 
-    # Histórico de peso diário (opcional, só se você já criou a tabela weight_log)
+    # Histórico de peso diário
     pesos = conn.execute(
         "SELECT weight_kg, log_date FROM weight_log WHERE user_id=? ORDER BY log_date DESC",
         (session["uid"],)
     ).fetchall() if table_exists(conn, "weight_log") else []
 
     conn.close()
-
-    print("DEBUG IMC:", imc, faixa, motivacao)  # para depuração
 
     return render_template(
         "perfil.html",
@@ -633,8 +640,11 @@ def perfil():
         faixa=faixa,
         peso_ideal=peso_ideal,
         motivacao=motivacao,
-        pesos=pesos
+        pesos=pesos,
+        mensagem=mensagem   # <- passa para o template
     )
+
+
 
 @app.route("/peso_diario", methods=["POST"])
 def peso_diario():
@@ -654,9 +664,10 @@ def peso_diario():
         flash("Peso inválido.", "error")
         return redirect(url_for("perfil"))
 
-    # pega horário local e formata YYYY-MM-DD HH:MM:SS (compatível com SQLite)
-now_local = datetime.now(ZoneInfo("America/Sao_Paulo")).strftime("%Y-%m-%d %H:%M:%S")
+    # pega horário local em São Paulo e formata YYYY-MM-DD HH:MM:SS
+    now_local = datetime.now(ZoneInfo("America/Sao_Paulo")).strftime("%Y-%m-%d %H:%M:%S")
 
+    # grava no banco
     with sqlite3.connect(DB_PATH) as conn:
         cur = conn.cursor()
         cur.execute(
@@ -746,14 +757,8 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
     
-@app.route('/')
-def splash():
-    # Mostra a tela por 3 segundos e redireciona
-    return render_template('splash.html')
 
-@app.route('/home')
-def home():
-    return render_template('index.html')  # sua página principal
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
