@@ -1,2 +1,154 @@
-<h2>Comparativo Antes x Depois</h2>
-<img src="data:image/png;base64,{{ img_data }}" alt="Gráfico Comparativo">
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Comparativo Corporal</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8f8f8;
+      padding: 20px;
+      color: #333;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 10px;
+      color: #222;
+    }
+    p {
+      color: #666;
+    }
+    .grafico-container {
+      width: 95%;
+      max-width: 700px;
+      margin: 30px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 8px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    th {
+      background: #f0f0f0;
+    }
+    .positivo { color: green; font-weight: bold; }
+    .negativo { color: red; font-weight: bold; }
+    .botao-voltar {
+      display: inline-block;
+      background: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      margin-top: 20px;
+    }
+    .botao-voltar:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>📊 Comparativo de Medidas</h1>
+  <p>Veja sua evolução entre a primeira e a última medição registrada.</p>
+
+  <div class="grafico-container">
+    <canvas id="comparativoChart"></canvas>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Medida</th>
+        <th>Primeira (cm)</th>
+        <th>Última (cm)</th>
+        <th>Diferença</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for key, label in campos.items() %}
+      <tr>
+        <td>{{ label }}</td>
+        <td>{{ "%.1f"|format(primeira[key]) }}</td>
+        <td>{{ "%.1f"|format(ultima[key]) }}</td>
+        <td>
+          {% if diferencas[key] > 0 %}
+            <span class="positivo">+{{ "%.1f"|format(diferencas[key]) }}</span>
+          {% elif diferencas[key] < 0 %}
+            <span class="negativo">{{ "%.1f"|format(diferencas[key]) }}</span>
+          {% else %}
+            <span>0</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <a class="botao-voltar" href="{{ url_for('perfil') }}">← Voltar ao Perfil</a>
+
+  <script>
+    const ctx = document.getElementById('comparativoChart').getContext('2d');
+
+    const labels = [
+      {% for key, label in campos.items() %}
+        "{{ label }}",
+      {% endfor %}
+    ];
+
+    const primeiraData = [
+      {% for key, label in campos.items() %}
+        {{ primeira[key] }},
+      {% endfor %}
+    ];
+
+    const ultimaData = [
+      {% for key, label in campos.items() %}
+        {{ ultima[key] }},
+      {% endfor %}
+    ];
+
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Primeira Medida',
+            data: primeiraData,
+            backgroundColor: 'rgba(255, 99, 132, 0.7)'
+          },
+          {
+            label: 'Última Medida',
+            data: ultimaData,
+            backgroundColor: 'rgba(75, 192, 192, 0.7)'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Evolução Corporal — Antes e Depois',
+            font: { size: 18 }
+          },
+          legend: { position: 'top' }
+        },
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: 'cm' } }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -8,9 +8,7 @@ from zoneinfo import ZoneInfo   # <— importa o fuso horário
 import time
 import pytz
 
-import io
-import base64
-import matplotlib.pyplot as plt
+
 
 tz = pytz.timezone("America/Sao_Paulo")
 now_local = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
@@ -553,6 +551,7 @@ def recuperacao_view():
     return render_template("recuperacao.html", dicas=dicas)
     
     
+    
 @app.route("/perfil", methods=["GET", "POST"])
 @login_required
 def perfil():
@@ -640,9 +639,15 @@ def perfil():
         (session["uid"],)
     ).fetchall() if table_exists(conn, "weight_log") else []
 
+    # 🔍 Pega última medida para mostrar botão de comparativo
+    ultima_medida = conn.execute(
+        "SELECT * FROM body_measures WHERE user_id=? ORDER BY created_at DESC LIMIT 1",
+        (session["uid"],)
+    ).fetchone() if table_exists(conn, "body_measures") else None
+
     conn.close()
 
-    # 🚀 redireciona se for primeira vez OU se atingiu peso ideal
+    # 🚀 Redireciona se for primeira vez OU se atingiu peso ideal
     if redirecionar_para_medidas:
         return redirect(url_for("medidas"))
 
@@ -654,7 +659,8 @@ def perfil():
         peso_ideal=peso_ideal,
         motivacao=motivacao,
         pesos=pesos,
-        mensagem=mensagem
+        mensagem=mensagem,
+        ultima_medida=ultima_medida  # envia para HTML
     )
     
     
@@ -742,67 +748,49 @@ def peso_diario():
     return redirect(url_for("perfil"))
     
     
-
 @app.route("/comparativo")
 @login_required
 def comparativo():
     conn = get_db()
-    user_id = session["uid"]
 
-    # Pega peso inicial e final
-    peso_inicial = conn.execute("SELECT weight_kg FROM weight_log WHERE user_id=? ORDER BY log_date ASC LIMIT 1", (user_id,)).fetchone()
-    peso_final = conn.execute("SELECT weight_kg FROM weight_log WHERE user_id=? ORDER BY log_date DESC LIMIT 1", (user_id,)).fetchone()
+    primeira = conn.execute("""
+        SELECT * FROM body_measures
+        WHERE user_id=? ORDER BY created_at ASC LIMIT 1
+    """, (session["uid"],)).fetchone()
 
-    # Pega medidas inicial e final
-    medidas_inicial = conn.execute("SELECT * FROM body_measures WHERE user_id=? ORDER BY created_at ASC LIMIT 1", (user_id,)).fetchone()
-    medidas_final = conn.execute("SELECT * FROM body_measures WHERE user_id=? ORDER BY created_at DESC LIMIT 1", (user_id,)).fetchone()
+    ultima = conn.execute("""
+        SELECT * FROM body_measures
+        WHERE user_id=? ORDER BY created_at DESC LIMIT 1
+    """, (session["uid"],)).fetchone()
 
     conn.close()
 
-    # Monta os dados
-    labels = ["Peso", "Barriga", "Peito", "Braço Dir", "Braço Esq", "Coxa Dir", "Coxa Esq", "Panturrilha Dir", "Panturrilha Esq"]
-    antes = [
-        peso_inicial["weight_kg"] if peso_inicial else 0,
-        medidas_inicial["barriga"] if medidas_inicial else 0,
-        medidas_inicial["peito"] if medidas_inicial else 0,
-        medidas_inicial["braco_dir"] if medidas_inicial else 0,
-        medidas_inicial["braco_esq"] if medidas_inicial else 0,
-        medidas_inicial["coxa_dir"] if medidas_inicial else 0,
-        medidas_inicial["coxa_esq"] if medidas_inicial else 0,
-        medidas_inicial["pant_dir"] if medidas_inicial else 0,
-        medidas_inicial["pant_esq"] if medidas_inicial else 0,
-    ]
-    depois = [
-        peso_final["weight_kg"] if peso_final else 0,
-        medidas_final["barriga"] if medidas_final else 0,
-        medidas_final["peito"] if medidas_final else 0,
-        medidas_final["braco_dir"] if medidas_final else 0,
-        medidas_final["braco_esq"] if medidas_final else 0,
-        medidas_final["coxa_dir"] if medidas_final else 0,
-        medidas_final["coxa_esq"] if medidas_final else 0,
-        medidas_final["pant_dir"] if medidas_final else 0,
-        medidas_final["pant_esq"] if medidas_final else 0,
-    ]
+    if not primeira or not ultima:
+        flash("Você precisa registrar pelo menos duas medidas para gerar o comparativo.", "warning")
+        return redirect(url_for("medidas"))
 
-    # Gera gráfico
-    fig, ax = plt.subplots(figsize=(10, 6))
-    x = range(len(labels))
-    ax.bar([i - 0.2 for i in x], antes, width=0.4, label="Antes")
-    ax.bar([i + 0.2 for i in x], depois, width=0.4, label="Depois")
-    ax.set_xticks(x)
-    ax.set_xticklabels(labels, rotation=45)
-    ax.legend()
-    ax.set_title("Comparativo Antes x Depois")
+    campos = {
+        "barriga": "Barriga",
+        "peito": "Peito",
+        "braco_dir": "Braço Direito",
+        "braco_esq": "Braço Esquerdo",
+        "coxa_dir": "Coxa Direita",
+        "coxa_esq": "Coxa Esquerda",
+        "pant_dir": "Panturrilha Direita",
+        "pant_esq": "Panturrilha Esquerda"
+    }
 
-    # Converte imagem para base64
-    buf = io.BytesIO()
-    plt.tight_layout()
-    plt.savefig(buf, format="png")
-    buf.seek(0)
-    img_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")
-    buf.close()
+    diferencas = {}
+    for key in campos.keys():
+        diff = float(ultima[key]) - float(primeira[key])
+        diferencas[key] = round(diff, 1)
 
-    return render_template("comparativo.html", img_data=img_base64)
+    return render_template("comparativo.html",
+                           primeira=primeira,
+                           ultima=ultima,
+                           campos=campos,
+                           diferencas=diferencas)
+                           
     
 @app.route("/peso_grafico")
 def peso_grafico():
