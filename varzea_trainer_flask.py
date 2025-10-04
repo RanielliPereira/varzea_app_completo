@@ -245,7 +245,7 @@ TREINOS = [
 ]
 # Treino Intermediário: 21 dias (estrutura para integrar ao app)
 TREINO_21_DIAS = [
-    ("Semana 1 - Dia 1", [
+    ("Dia 1", [
         "Aquecimento: corrida leve + mobilidade de quadril (5 min)",
         "3x12 Agachamento com salto",
         "3x12 Flexões",
@@ -253,111 +253,111 @@ TREINO_21_DIAS = [
         "3x30s Prancha",
         "Alongamento dinâmico (3 min)"
     ]),
-    ("Semana 1 - Dia 2", [
+    ("Dia 2", [
         "Aquecimento: pular corda 3 min + mobilidade",
         "4x10 Avanços (cada perna)",
         "3x15 Abdominal bicicleta",
         "Circuito: 3 voltas — 12 agachamentos + 10 flexões + 20s prancha",
         "Alongamento leve"
     ]),
-    ("Semana 1 - Dia 3", [
+    ("Dia 3", [
         "Aquecimento: polichinelo 3 min",
         "3x12 Skater Jump",
         "3x12 Burpees (intensidade moderada)",
         "Sprint curto: 6x10m (descanso 40s)",
         "Alongamento e mobilidade"
     ]),
-    ("Semana 1 - Dia 4 (Descanso ativo)", [
+    ("Dia 4 (Descanso ativo)", [
         "Caminhada leve 25-35 min ou yoga curta",
         "Mobilidade de quadril/tornozelo 10 min"
     ]),
-    ("Semana 1 - Dia 5", [
+    ("Dia 5", [
         "Aquecimento leve 5 min",
         "4x12 Agachamento com carga improvisada (galão/mochila)",
         "3x12 Remada curvada com galão",
         "3x30s Prancha",
         "5 sprints de 10m (força total)"
     ]),
-    ("Semana 1 - Dia 6", [
+    ("Dia 6", [
         "Explosão: 8 sprints de 10m (descanso 40s)",
         "3x12 Agachamento com salto",
         "3x12 Skater Jump",
         "Core: 3x20s prancha lateral cada lado"
     ]),
-    ("Semana 1 - Dia 7 (Descanso ativo)", [
+    ("Dia 7 (Descanso ativo)", [
         "Caminhada leve ou alongamento prolongado",
         "Foque em sono e hidratação"
     ]),
 
-    ("Semana 2 - Dia 8", [
+    ("Dia 8", [
         "Aquecimento: skipping + mobilidade (5 min)",
         "3x10 Agachamento afundo com salto (cada perna)",
         "3x10 Flexão tocando ombro",
         "Sprint curto no lugar: 8 séries (20s / 20s)",
         "Prancha lateral 3x20s cada lado"
     ]),
-    ("Semana 2 - Dia 9", [
+    ("Dia 9", [
         "Circuito HIIT (4 voltas): 30s ON / 15s OFF",
         "- Burpees 30s",
         "- Agachamento com salto 30s",
         "- Mountain climbers 30s",
         "Core: 3x15 abdominal infra"
     ]),
-    ("Semana 2 - Day 10", [
+    ("Dia 10", [
         "Aquecimento: corda 5 min",
         "3 séries: 12 agachamento com galão, 10 avanço cada perna, 8 flexões rápidas",
         "6 sprints de 10m",
         "Alongamento"
     ]),
-    ("Semana 2 - Dia 11", [
+    ("Dia 11", [
         "Força explosiva: 5x1min corda (30s descanso)",
         "3x10 Burpees em ritmo forte",
         "Pliometria leve: 3x8 saltos horizontais",
         "Core: prancha 3x40s"
     ]),
-    ("Semana 2 - Dia 12 (Descanso ativo)", [
+    ("Dia 12 (Descanso ativo)", [
         "Caminhada leve + mobilidade (30 min)",
         "Liberação miofascial (se puder) e rotação de quadril"
     ]),
-    ("Semana 2 - Dia 13", [
+    ("Dia 13", [
         "Treino de velocidade: 10 sprints de 10m (máxima explosão) com 40s descanso",
         "3x12 Skater Jump",
         "3x15 abdominal bicicleta"
     ]),
-    ("Semana 2 - Dia 14 (Pré-jogo simulado)", [
+    ("Dia 14", [
         "Treino em circuito: 4 voltas — 10 burpees + 15 agachamentos com salto + 30s prancha",
         "5 sprints de 15m (progressivo)",
         "Alongamento dinâmico"
     ]),
 
-    ("Semana 3 - Dia 15", [
+    ("Dia 15", [
         "Aquecimento: corrida leve 5 min + mobilidade completa",
         "Burpee + Sprint combo: 4 séries (6 burpees + 20m sprint)",
         "3x12 Agachamento com salto",
         "Core: prancha com elevação de perna 3x10 cada lado"
     ]),
-    ("Semana 3 - Dia 16", [
+    ("Dia 16", [
         "Treino intervalado longo: 8x100m (ritmo forte) com caminhada de 60-90s",
         "Pós: 10 min de alongamento"
     ]),
-    ("Semana 3 - Dia 17", [
+    ("Dia 17", [
         "HIIT curto e intenso: 10 séries — 30s ON / 15s OFF (escolha 2 exercícios por série: burpee, agach salto, mountain)",
         "Core: 4x30s prancha"
     ]),
-    ("Semana 3 - Dia 18 (Descanso ativo)", [
+    ("Dia 18 (Descanso ativo)", [
         "Recuperação: caminhada + foam roll / alongamento 20-30 min",
         "Hidratação e sono"
     ]),
-    ("Semana 3 - Dia 19", [
+    ("Dia 19", [
         "Simulação de jogo: 20 min contínuo em ritmo variado (trocar 3min forte / 2min leve)",
         "Tiros curtos: 6x20m",
         "Core e mobilidade"
     ]),
-    ("Semana 3 - Dia 20 (Preparo para jogo)", [
+    ("Dia 20 (Preparo para jogo)", [
         "Treino leve: corda 3x1min + 3 sprints progressivos 50-70-90%",
         "Alongamento dinâmico - foco em quadril e posterior"
     ]),
-    ("Semana 3 - Dia 21 (Dia do teste/simulação)", [
+    ("Dia 21 (Dia do teste/simulação)", [
         "Aquecimento completo (10 min)",
         "Jogo simulado ou circuito longo: 3 voltas intensas do circuito completo",
         "Recuperação: hidratação + refeição com carboidrato + proteína"
@@ -495,10 +495,51 @@ def dashboard():
     #return render_template("treino.html", treinos=TREINOS, feitos=feitos)
 
     
-@app.route("/treinos_intermediario")
-@login_required
-def treinos_intermediario():
-    return render_template("treinos_intermediario.html", treinos=TREINO_21_DIAS)
+#@app.route("/treinos_intermediario")
+#@login_required
+#def treinos_intermediario():
+    #return render_template("treinos_intermediario.html", treinos=TREINO_21_DIAS)
+    
+@app.route("/treino_semi_pro", methods=["GET", "POST"])
+def treino_semi_pro():
+    if "user_id" not in session:
+        return redirect("/login")
+
+    user_id = session["user_id"]
+    total_dias = len(TREINO_21_DIAS)
+
+    conn = sqlite3.connect("varzea.db")
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS treino_checkin (
+            user_id INTEGER,
+            dia INTEGER
+        )
+    """)
+    conn.commit()
+
+    # 🔴 Registrar check-in
+    if request.method == "POST":
+        dia = int(request.form["dia"])
+        cur.execute("SELECT 1 FROM treino_checkin WHERE user_id=? AND dia=?", (user_id, dia))
+        if not cur.fetchone():
+            cur.execute("INSERT INTO treino_checkin (user_id, dia) VALUES (?, ?)", (user_id, dia))
+            conn.commit()
+
+    # 🟢 Buscar dias concluídos
+    cur.execute("SELECT dia FROM treino_checkin WHERE user_id=?", (user_id,))
+    feitos = [row[0] for row in cur.fetchall()]
+
+    # ✅ Se terminou todos os dias, resetar para novo ciclo
+    if len(feitos) >= total_dias:
+        cur.execute("DELETE FROM treino_checkin WHERE user_id=?", (user_id,))
+        conn.commit()
+        feitos = []  # limpa a lista pro template voltar verde
+        flash("🏁 Parabéns! Você completou os 21 dias e o ciclo foi reiniciado. Bora de novo?", "success")
+
+    conn.close()
+
+    return render_template("treino_semi_pro.html", treinos=TREINO_21_DIAS, feitos=feitos)
     
 @app.route("/checkin", methods=["POST"])
 @login_required
