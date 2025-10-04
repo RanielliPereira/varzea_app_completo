@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Minhas Medidas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        form {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 4px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        button {
+            margin-top: 15px;
+            padding: 10px;
+            width: 100%;
+            background: #007BFF;
+            border: none;
+            color: #fff;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .card {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+        .positivo { color: green; font-weight: bold; }
+        .negativo { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h1>📏 Registrar Medidas</h1>
+
+    <form method="POST">
+        <label for="barriga">Barriga (cm)</label>
+        <input type="number" step="0.1" name="barriga" id="barriga" required>
+
+        <label for="peito">Peito (cm)</label>
+        <input type="number" step="0.1" name="peito" id="peito" required>
+
+        <label for="braco_dir">Braço Direito (cm)</label>
+        <input type="number" step="0.1" name="braco_dir" id="braco_dir" required>
+
+        <label for="braco_esq">Braço Esquerdo (cm)</label>
+        <input type="number" step="0.1" name="braco_esq" id="braco_esq" required>
+
+        <label for="coxa_dir">Coxa Direita (cm)</label>
+        <input type="number" step="0.1" name="coxa_dir" id="coxa_dir" required>
+
+        <label for="coxa_esq">Coxa Esquerda (cm)</label>
+        <input type="number" step="0.1" name="coxa_esq" id="coxa_esq" required>
+
+        <label for="pant_dir">Panturrilha Direita (cm)</label>
+        <input type="number" step="0.1" name="pant_dir" id="pant_dir" required>
+
+        <label for="pant_esq">Panturrilha Esquerda (cm)</label>
+        <input type="number" step="0.1" name="pant_esq" id="pant_esq" required>
+
+        <button type="submit">Salvar Medidas</button>
+    </form>
+
+    {% if inicial %}
+    <div class="card">
+        <h3>📌 Primeira Medida Registrada</h3>
+        <p><b>Barriga:</b> {{ inicial.barriga }} cm</p>
+        <p><b>Peito:</b> {{ inicial.peito }} cm</p>
+        <p><b>Braço Direito:</b> {{ inicial.braco_dir }} cm</p>
+        <p><b>Braço Esquerdo:</b> {{ inicial.braco_esq }} cm</p>
+        <p><b>Coxa Direita:</b> {{ inicial.coxa_dir }} cm</p>
+        <p><b>Coxa Esquerda:</b> {{ inicial.coxa_esq }} cm</p>
+        <p><b>Panturrilha Direita:</b> {{ inicial.pant_dir }} cm</p>
+        <p><b>Panturrilha Esquerda:</b> {{ inicial.pant_esq }} cm</p>
+        <small>Registrado em {{ inicial.created_at }}</small>
+    </div>
+    {% endif %}
+
+    {% if ultima %}
+    <div class="card">
+        <h3>📌 Última Medida Registrada</h3>
+        <p><b>Barriga:</b> {{ ultima.barriga }} cm</p>
+        <p><b>Peito:</b> {{ ultima.peito }} cm</p>
+        <p><b>Braço Direito:</b> {{ ultima.braco_dir }} cm</p>
+        <p><b>Braço Esquerdo:</b> {{ ultima.braco_esq }} cm</p>
+        <p><b>Coxa Direita:</b> {{ ultima.coxa_dir }} cm</p>
+        <p><b>Coxa Esquerda:</b> {{ ultima.coxa_esq }} cm</p>
+        <p><b>Panturrilha Direita:</b> {{ ultima.pant_dir }} cm</p>
+        <p><b>Panturrilha Esquerda:</b> {{ ultima.pant_esq }} cm</p>
+        <small>Registrado em {{ ultima.created_at }}</small>
+    </div>
+    {% endif %}
+
+{% if inicial and ultima %}
+<div class="card">
+    <h3>📊 Comparação de Medidas</h3>
+
+    <table border="1" cellspacing="0" cellpadding="6" style="width:100%; text-align:center; border-collapse: collapse; margin-bottom:20px;">
+        <thead style="background:#f4f4f4;">
+            <tr>
+                <th>Medida</th>
+                <th>Primeira (cm)</th>
+                <th>Última (cm)</th>
+                <th>Diferença</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set campos = {
+                "barriga": "Barriga",
+                "peito": "Peito",
+                "braco_dir": "Braço Direito",
+                "braco_esq": "Braço Esquerdo",
+                "coxa_dir": "Coxa Direita",
+                "coxa_esq": "Coxa Esquerda",
+                "pant_dir": "Panturrilha Direita",
+                "pant_esq": "Panturrilha Esquerda"
+            } %}
+
+            {% for key, label in campos.items() %}
+                {% set diff = ultima[key] - inicial[key] %}
+                <tr>
+                    <td><b>{{ label }}</b></td>
+                    <td>{{ "%.1f"|format(inicial[key]) }}</td>
+                    <td>{{ "%.1f"|format(ultima[key]) }}</td>
+                    <td>
+                        {% if key == "barriga" %}
+                            {% if diff < 0 %}
+                                <span style="color:green;">{{ "%.1f"|format(diff) }} ✅</span>
+                            {% elif diff > 0 %}
+                                <span style="color:red;">+{{ "%.1f"|format(diff) }} ⚠️</span>
+                            {% else %}
+                                <span style="color:gray;">0 (sem alteração)</span>
+                            {% endif %}
+                        {% else %}
+                            {% if diff > 0 %}
+                                <span style="color:green;">+{{ "%.1f"|format(diff) }} ✅</span>
+                            {% elif diff < 0 %}
+                                <span style="color:red;">{{ "%.1f"|format(diff) }} ⚠️</span>
+                            {% else %}
+                                <span style="color:gray;">0 (sem alteração)</span>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Gráfico -->
+    <h3>📈 Evolução Gráfica</h3>
+    <canvas id="medidasChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('medidasChart').getContext('2d');
+
+    const labels = [
+        {% for key, label in campos.items() %}
+            "{{ label }}",
+        {% endfor %}
+    ];
+
+    const primeiraData = [
+        {% for key, label in campos.items() %}
+            {{ inicial[key] }},
+        {% endfor %}
+    ];
+
+    const ultimaData = [
+        {% for key, label in campos.items() %}
+            {{ ultima[key] }},
+        {% endfor %}
+    ];
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Primeira Medida',
+                    data: primeiraData,
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                },
+                {
+                    label: 'Última Medida',
+                    data: ultimaData,
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+</script>
+{% endif %}
+
+</body>
+</html>

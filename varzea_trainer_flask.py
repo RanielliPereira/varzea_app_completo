@@ -8,6 +8,10 @@ from zoneinfo import ZoneInfo   # <— importa o fuso horário
 import time
 import pytz
 
+import io
+import base64
+import matplotlib.pyplot as plt
+
 tz = pytz.timezone("America/Sao_Paulo")
 now_local = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
 
@@ -557,12 +561,13 @@ def perfil():
         "SELECT * FROM profile WHERE user_id=?", (session["uid"],)
     ).fetchone()
 
+    redirecionar_para_medidas = False  # flag
+
     if request.method == "POST":
         idade = request.form.get("idade", "").strip()
         altura_raw = request.form.get("altura", "").strip()
         peso_raw = request.form.get("peso", "").strip()
 
-        # normaliza vírgula -> ponto
         altura_norm = altura_raw.replace(",", ".") if altura_raw else ""
         peso_norm = peso_raw.replace(",", ".") if peso_raw else ""
 
@@ -590,14 +595,16 @@ def perfil():
                     "INSERT INTO profile(user_id, age, height_m, weight_kg) VALUES (?,?,?,?)",
                     (session["uid"], idade if idade else None, altura_val, peso_val)
                 )
+                redirecionar_para_medidas = True  # primeira vez -> vai preencher medidas
+
             conn.commit()
             prof = conn.execute(
                 "SELECT * FROM profile WHERE user_id=?", (session["uid"],)
             ).fetchone()
 
-    # ==== cálculo IMC ====
     imc = faixa = peso_ideal = motivacao = None
-    mensagem = None   # <- nova variável para o aviso
+    mensagem = None
+
     try:
         if prof and prof["height_m"] and prof["weight_kg"]:
             h = float(str(prof["height_m"]).replace(",", "."))
@@ -621,20 +628,23 @@ def perfil():
                     faixa = "Obesidade"
                     motivacao = "🔥 Hora de dar o gás! Cada treino é um passo rumo à evolução."
 
-                # ===== mensagem de peso ideal =====
                 if min_w <= w <= max_w:
                     mensagem = "🎉 Parabéns! Você atingiu seu peso ideal."
+                    redirecionar_para_medidas = True  # peso ideal -> pedir medidas finais
     except Exception as e:
         print("Erro ao calcular IMC:", e)
         flash("Não foi possível calcular o IMC com os valores fornecidos.", "error")
 
-    # Histórico de peso diário
     pesos = conn.execute(
         "SELECT weight_kg, log_date FROM weight_log WHERE user_id=? ORDER BY log_date DESC",
         (session["uid"],)
     ).fetchall() if table_exists(conn, "weight_log") else []
 
     conn.close()
+
+    # 🚀 redireciona se for primeira vez OU se atingiu peso ideal
+    if redirecionar_para_medidas:
+        return redirect(url_for("medidas"))
 
     return render_template(
         "perfil.html",
@@ -644,11 +654,51 @@ def perfil():
         peso_ideal=peso_ideal,
         motivacao=motivacao,
         pesos=pesos,
-        mensagem=mensagem   # <- passa para o template
+        mensagem=mensagem
     )
+    
+    
+@app.route("/medidas", methods=["GET", "POST"])
+@login_required
+def medidas():
+    conn = get_db()
+    user_id = session["uid"]
 
+    if request.method == "POST":
+        barriga = request.form.get("barriga")
+        peito = request.form.get("peito")
+        braco_dir = request.form.get("braco_dir")
+        braco_esq = request.form.get("braco_esq")
+        coxa_dir = request.form.get("coxa_dir")
+        coxa_esq = request.form.get("coxa_esq")
+        pant_dir = request.form.get("pant_dir")
+        pant_esq = request.form.get("pant_esq")
 
+        conn.execute("""
+            INSERT INTO body_measures
+            (user_id, barriga, peito, braco_dir, braco_esq, coxa_dir, coxa_esq, pant_dir, pant_esq)
+            VALUES (?,?,?,?,?,?,?,?,?)
+        """, (user_id, barriga, peito, braco_dir, braco_esq, coxa_dir, coxa_esq, pant_dir, pant_esq))
+        conn.commit()
+        flash("✅ Medidas salvas com sucesso!", "success")
+        return redirect(url_for("medidas"))
 
+    # Pega a primeira e a última medida para exibir no comparativo
+    inicial = conn.execute("""
+        SELECT * FROM body_measures
+        WHERE user_id=? ORDER BY created_at ASC LIMIT 1
+    """, (user_id,)).fetchone()
+
+    ultima = conn.execute("""
+        SELECT * FROM body_measures
+        WHERE user_id=? ORDER BY created_at DESC LIMIT 1
+    """, (user_id,)).fetchone()
+
+    conn.close()
+
+    return render_template("medidas.html", inicial=inicial, ultima=ultima)
+    
+    
 @app.route("/peso_diario", methods=["POST"])
 def peso_diario():
     user_id = session.get("uid")
@@ -667,10 +717,8 @@ def peso_diario():
         flash("Peso inválido.", "error")
         return redirect(url_for("perfil"))
 
-    # pega horário local em São Paulo e formata YYYY-MM-DD HH:MM:SS
-    now_local = datetime.now(ZoneInfo("America/Sao_Paulo")).strftime("%Y-%m-%d %H:%M:%S")
+    now_local = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # grava no banco
     with sqlite3.connect(DB_PATH) as conn:
         cur = conn.cursor()
         cur.execute(
@@ -679,8 +727,82 @@ def peso_diario():
         )
         conn.commit()
 
+        # Verifica perfil para calcular IMC
+        prof = conn.execute("SELECT * FROM profile WHERE user_id=?", (user_id,)).fetchone()
+        if prof and prof["height_m"]:
+            h = float(prof["height_m"])
+            min_w = 18.5 * (h * h)
+            max_w = 24.9 * (h * h)
+
+            if min_w <= p <= max_w:
+                flash("🎉 Você atingiu o peso ideal! Agora registre suas medidas finais.")
+                return redirect(url_for("medidas"))
+
     flash("Peso salvo com sucesso!")
     return redirect(url_for("perfil"))
+    
+    
+
+@app.route("/comparativo")
+@login_required
+def comparativo():
+    conn = get_db()
+    user_id = session["uid"]
+
+    # Pega peso inicial e final
+    peso_inicial = conn.execute("SELECT weight_kg FROM weight_log WHERE user_id=? ORDER BY log_date ASC LIMIT 1", (user_id,)).fetchone()
+    peso_final = conn.execute("SELECT weight_kg FROM weight_log WHERE user_id=? ORDER BY log_date DESC LIMIT 1", (user_id,)).fetchone()
+
+    # Pega medidas inicial e final
+    medidas_inicial = conn.execute("SELECT * FROM body_measures WHERE user_id=? ORDER BY created_at ASC LIMIT 1", (user_id,)).fetchone()
+    medidas_final = conn.execute("SELECT * FROM body_measures WHERE user_id=? ORDER BY created_at DESC LIMIT 1", (user_id,)).fetchone()
+
+    conn.close()
+
+    # Monta os dados
+    labels = ["Peso", "Barriga", "Peito", "Braço Dir", "Braço Esq", "Coxa Dir", "Coxa Esq", "Panturrilha Dir", "Panturrilha Esq"]
+    antes = [
+        peso_inicial["weight_kg"] if peso_inicial else 0,
+        medidas_inicial["barriga"] if medidas_inicial else 0,
+        medidas_inicial["peito"] if medidas_inicial else 0,
+        medidas_inicial["braco_dir"] if medidas_inicial else 0,
+        medidas_inicial["braco_esq"] if medidas_inicial else 0,
+        medidas_inicial["coxa_dir"] if medidas_inicial else 0,
+        medidas_inicial["coxa_esq"] if medidas_inicial else 0,
+        medidas_inicial["pant_dir"] if medidas_inicial else 0,
+        medidas_inicial["pant_esq"] if medidas_inicial else 0,
+    ]
+    depois = [
+        peso_final["weight_kg"] if peso_final else 0,
+        medidas_final["barriga"] if medidas_final else 0,
+        medidas_final["peito"] if medidas_final else 0,
+        medidas_final["braco_dir"] if medidas_final else 0,
+        medidas_final["braco_esq"] if medidas_final else 0,
+        medidas_final["coxa_dir"] if medidas_final else 0,
+        medidas_final["coxa_esq"] if medidas_final else 0,
+        medidas_final["pant_dir"] if medidas_final else 0,
+        medidas_final["pant_esq"] if medidas_final else 0,
+    ]
+
+    # Gera gráfico
+    fig, ax = plt.subplots(figsize=(10, 6))
+    x = range(len(labels))
+    ax.bar([i - 0.2 for i in x], antes, width=0.4, label="Antes")
+    ax.bar([i + 0.2 for i in x], depois, width=0.4, label="Depois")
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, rotation=45)
+    ax.legend()
+    ax.set_title("Comparativo Antes x Depois")
+
+    # Converte imagem para base64
+    buf = io.BytesIO()
+    plt.tight_layout()
+    plt.savefig(buf, format="png")
+    buf.seek(0)
+    img_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+    buf.close()
+
+    return render_template("comparativo.html", img_data=img_base64)
     
 @app.route("/peso_grafico")
 def peso_grafico():

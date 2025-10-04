@@ -1,0 +1,18 @@
+# Ignorar banco de dados local
+*.db
+
+# Cache do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Arquivos temporários
+*.log
+*.tmp
+*.swp
+.DS_Store
+
+# Ambiente virtual
+venv/
+.env/
