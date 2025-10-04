@@ -33,6 +33,10 @@
     <p style="text-align:center; margin-top:20px;">
       <a href="/dashboard" class="btn-voltar">← Voltar ao Dashboard</a>
     </p>
+    
+  <a href="{{ url_for('medidas') }}" class="btn">
+    📝 Medidas
+</a>
     <hr>
 
     <h3>📅 Registrar peso diário</h3>
@@ -50,65 +54,6 @@
         {% endfor %}
       </ul>
     {% endif %}
-    
-    {% extends "base.html" %}
-{% block content %}
-<div class="container mt-4">
-  <h2 class="text-center">🏋️ Perfil do Jogador</h2>
-
-  <form method="POST" class="mt-4">
-    <div class="form-group">
-      <label>Idade:</label>
-      <input type="number" name="idade" class="form-control" value="{{ prof.age or '' }}">
-    </div>
-
-    <div class="form-group mt-3">
-      <label>Altura (m):</label>
-      <input type="text" name="altura" class="form-control" value="{{ prof.height_m or '' }}" placeholder="Ex: 1.75">
-    </div>
-
-    <div class="form-group mt-3">
-      <label>Peso (kg):</label>
-      <input type="text" name="peso" class="form-control" value="{{ prof.weight_kg or '' }}" placeholder="Ex: 72.5">
-    </div>
-
-    <button type="submit" class="btn btn-success mt-3 w-100">💾 Salvar Dados</button>
-  </form>
-
-  {% if imc %}
-  <div class="card mt-4 shadow-sm">
-    <div class="card-body">
-      <h4 class="card-title text-center">📊 Resultados</h4>
-      <p><strong>IMC:</strong> {{ imc }}</p>
-      <p><strong>Faixa:</strong> {{ faixa }}</p>
-      <p><strong>Peso ideal:</strong> {{ peso_ideal[0] }} kg a {{ peso_ideal[1] }} kg</p>
-      <p><strong>Motivação:</strong> {{ motivacao }}</p>
-
-      {% if mensagem %}
-      <div class="alert alert-success text-center mt-3">{{ mensagem }}</div>
-      {% endif %}
-    </div>
-  </div>
-  {% endif %}
-
-  {% if ultima_medida %}
-  <div class="mt-4 text-center">
-    <p class="text-muted">
-      Última medição registrada em:
-      <strong>{{ ultima_medida.created_at[:10] }}</strong>
-    </p>
-    <a href="{{ url_for('comparativo') }}" class="btn btn-primary w-100">
-      📊 Ver Comparativo Corporal
-    </a>
-  </div>
-  {% else %}
-  <div class="mt-4 text-center">
-    <p class="text-muted">Nenhuma medição corporal registrada ainda.</p>
-  </div>
-  {% endif %}
-</div>
-{% endblock %}
-    
   {% endif %}
   
   <a href="{{ url_for('peso_grafico') }}" class="btn-grafico">
@@ -120,6 +65,7 @@
     {{ mensagem }}
   </div>
 {% endif %}
+
 
 </body>
 </html>
