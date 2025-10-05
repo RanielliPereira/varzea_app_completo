@@ -244,124 +244,92 @@ TREINOS = [
     }
 ]
 # Treino Intermediário: 21 dias (estrutura para integrar ao app)
-TREINO_21_DIAS = [
-    ("Dia 1", [
-        "Aquecimento: corrida leve + mobilidade de quadril (5 min)",
-        "3x12 Agachamento com salto",
-        "3x12 Flexões",
-        "Corrida estacionária: 6 séries (30s forte / 15s leve)",
-        "3x30s Prancha",
-        "Alongamento dinâmico (3 min)"
-    ]),
-    ("Dia 2", [
-        "Aquecimento: pular corda 3 min + mobilidade",
-        "4x10 Avanços (cada perna)",
-        "3x15 Abdominal bicicleta",
-        "Circuito: 3 voltas — 12 agachamentos + 10 flexões + 20s prancha",
-        "Alongamento leve"
-    ]),
-    ("Dia 3", [
-        "Aquecimento: polichinelo 3 min",
-        "3x12 Skater Jump",
-        "3x12 Burpees (intensidade moderada)",
-        "Sprint curto: 6x10m (descanso 40s)",
+TREINOS_SEMI_PRO = [
+    {"id": 1, "titulo": "Dia 1 – Base + Força", "exercicios": [
+        "Corda: 4x1min (descanso 30s)",
+        "3 séries: 15 agachamento, 10 flexões, 20s prancha",
+        "5 tiros curtos 10m",
+    ]},
+    {"id": 2, "titulo": "Dia 2 – Resistência", "exercicios": [
+        "Caminhada leve 10min + alongamento dinâmico",
+        "Circuito: 12 agachamento + 10 burpees + 20s prancha (3x)",
+    ]},
+    {"id": 3, "titulo": "Dia 3 – Força", "exercicios": [
+        "3 séries com galão: 12 agachamento, 12 avanço, 12 remada curvada",
+        "3x25s prancha",
+    ]},
+    {"id": 4, "titulo": "Dia 4 – Explosão", "exercicios": [
+        "8 tiros de 10m (descanso 40s)",
+        "3x10 agachamento com salto",
+        "3x12 skater jump"
+    ]},
+    {"id": 5, "titulo": "Dia 5 – Abdômen + Core", "exercicios": [
+        "3x20s prancha lateral (cada lado)",
+        "3x15 abdominal infra",
+        "3x20 bicicleta"
+    ]},
+    {"id": 6, "titulo": "Dia 6 – Descanso ativo", "exercicios": [
+        "Caminhada leve ou alongamento geral"
+    ]},
+    {"id": 7, "titulo": "Dia 7 – Potência", "exercicios": [
+        "5x10m sprint",
+        "3x10 burpees",
+        "3x10 agachamento explosivo"
+    ]},
+    {"id": 8, "titulo": "Dia 8 – Força + Corda", "exercicios": [
+        "Corda 5x1min",
+        "3 séries: 12 avanço + 10 flexões + 20s prancha"
+    ]},
+    {"id": 9, "titulo": "Dia 9 – Condicionamento", "exercicios": [
+        "4 tiros de 20m (máximo)",
+        "Corda 3x1min leve",
+        "Circuito: 10 agachamento + 10 burpees + 10 abdominais"
+    ]},
+    {"id": 10, "titulo": "Dia 10 – Recuperação", "exercicios": [
         "Alongamento e mobilidade"
-    ]),
-    ("Dia 4 (Descanso ativo)", [
-        "Caminhada leve 25-35 min ou yoga curta",
-        "Mobilidade de quadril/tornozelo 10 min"
-    ]),
-    ("Dia 5", [
-        "Aquecimento leve 5 min",
-        "4x12 Agachamento com carga improvisada (galão/mochila)",
-        "3x12 Remada curvada com galão",
-        "3x30s Prancha",
-        "5 sprints de 10m (força total)"
-    ]),
-    ("Dia 6", [
-        "Explosão: 8 sprints de 10m (descanso 40s)",
-        "3x12 Agachamento com salto",
+    ]},
+    {"id": 11, "titulo": "Dia 11 – Força total", "exercicios": [
+        "3 séries com galão: 15 agachamento, 15 remada, 15 avanço",
+        "3x30s prancha"
+    ]},
+    {"id": 12, "titulo": "Dia 12 – Explosão + Sprint", "exercicios": [
+        "6 tiros de 15m",
         "3x12 Skater Jump",
-        "Core: 3x20s prancha lateral cada lado"
-    ]),
-    ("Dia 7 (Descanso ativo)", [
-        "Caminhada leve ou alongamento prolongado",
-        "Foque em sono e hidratação"
-    ]),
-
-    ("Dia 8", [
-        "Aquecimento: skipping + mobilidade (5 min)",
-        "3x10 Agachamento afundo com salto (cada perna)",
-        "3x10 Flexão tocando ombro",
-        "Sprint curto no lugar: 8 séries (20s / 20s)",
-        "Prancha lateral 3x20s cada lado"
-    ]),
-    ("Dia 9", [
-        "Circuito HIIT (4 voltas): 30s ON / 15s OFF",
-        "- Burpees 30s",
-        "- Agachamento com salto 30s",
-        "- Mountain climbers 30s",
-        "Core: 3x15 abdominal infra"
-    ]),
-    ("Dia 10", [
-        "Aquecimento: corda 5 min",
-        "3 séries: 12 agachamento com galão, 10 avanço cada perna, 8 flexões rápidas",
-        "6 sprints de 10m",
+        "3x10 burpees"
+    ]},
+    {"id": 13, "titulo": "Dia 13 – Core + Flexibilidade", "exercicios": [
+        "3x20s prancha",
+        "3x15 abdominal infra",
         "Alongamento"
-    ]),
-    ("Dia 11", [
-        "Força explosiva: 5x1min corda (30s descanso)",
-        "3x10 Burpees em ritmo forte",
-        "Pliometria leve: 3x8 saltos horizontais",
-        "Core: prancha 3x40s"
-    ]),
-    ("Dia 12 (Descanso ativo)", [
-        "Caminhada leve + mobilidade (30 min)",
-        "Liberação miofascial (se puder) e rotação de quadril"
-    ]),
-    ("Dia 13", [
-        "Treino de velocidade: 10 sprints de 10m (máxima explosão) com 40s descanso",
-        "3x12 Skater Jump",
-        "3x15 abdominal bicicleta"
-    ]),
-    ("Dia 14", [
-        "Treino em circuito: 4 voltas — 10 burpees + 15 agachamentos com salto + 30s prancha",
-        "5 sprints de 15m (progressivo)",
-        "Alongamento dinâmico"
-    ]),
-
-    ("Dia 15", [
-        "Aquecimento: corrida leve 5 min + mobilidade completa",
-        "Burpee + Sprint combo: 4 séries (6 burpees + 20m sprint)",
-        "3x12 Agachamento com salto",
-        "Core: prancha com elevação de perna 3x10 cada lado"
-    ]),
-    ("Dia 16", [
-        "Treino intervalado longo: 8x100m (ritmo forte) com caminhada de 60-90s",
-        "Pós: 10 min de alongamento"
-    ]),
-    ("Dia 17", [
-        "HIIT curto e intenso: 10 séries — 30s ON / 15s OFF (escolha 2 exercícios por série: burpee, agach salto, mountain)",
-        "Core: 4x30s prancha"
-    ]),
-    ("Dia 18 (Descanso ativo)", [
-        "Recuperação: caminhada + foam roll / alongamento 20-30 min",
-        "Hidratação e sono"
-    ]),
-    ("Dia 19", [
-        "Simulação de jogo: 20 min contínuo em ritmo variado (trocar 3min forte / 2min leve)",
-        "Tiros curtos: 6x20m",
-        "Core e mobilidade"
-    ]),
-    ("Dia 20 (Preparo para jogo)", [
-        "Treino leve: corda 3x1min + 3 sprints progressivos 50-70-90%",
-        "Alongamento dinâmico - foco em quadril e posterior"
-    ]),
-    ("Dia 21 (Dia do teste/simulação)", [
-        "Aquecimento completo (10 min)",
-        "Jogo simulado ou circuito longo: 3 voltas intensas do circuito completo",
-        "Recuperação: hidratação + refeição com carboidrato + proteína"
-    ]),
+    ]},
+    {"id": 14, "titulo": "Dia 14 – Condicionamento", "exercicios": [
+        "Corda 4x1min",
+        "Circuito: 10 burpees, 10 agachamentos, 10 flexões (3x)"
+    ]},
+    {"id": 15, "titulo": "Dia 15 – Força", "exercicios": [
+        "4 séries com galão: 10 agachamento, 10 avanço, 10 remada"
+    ]},
+    {"id": 16, "titulo": "Dia 16 – Explosão", "exercicios": [
+        "5 sprints 10m",
+        "3x12 agachamento com salto",
+        "3x15 skater jump"
+    ]},
+    {"id": 17, "titulo": "Dia 17 – Descanso ativo", "exercicios": [
+        "Caminhada leve ou alongamento"
+    ]},
+    {"id": 18, "titulo": "Dia 18 – Força + Core", "exercicios": [
+        "3x15 agachamento + 3x20s prancha + 3x12 flexão"
+    ]},
+    {"id": 19, "titulo": "Dia 19 – Condicionamento final", "exercicios": [
+        "Corda 5x1min",
+        "5 tiros curtos de 10m"
+    ]},
+    {"id": 20, "titulo": "Dia 20 – Mobilidade", "exercicios": [
+        "Alongamento geral e mobilidade articular"
+    ]},
+    {"id": 21, "titulo": "Dia 21 – Dia de Jogo", "exercicios": [
+        "Aquecimento leve + alongamento + 3 sprints progressivos"
+    ]},
 ]
 
 CARDAPIO = [
@@ -499,28 +467,33 @@ def dashboard():
 #@login_required
 #def treinos_intermediario():
     #return render_template("treinos_intermediario.html", treinos=TREINO_21_DIAS)
-    
-@app.route("/treino_semi_pro", methods=["GET", "POST"])
-def treino_semi_pro():
+   
+@app.route("/treino_semi_pro/<int:dia>", methods=["GET", "POST"])
+def treino_semi_pro(dia):
     if "user_id" not in session:
         return redirect("/login")
 
     user_id = session["user_id"]
     total_dias = len(TREINO_21_DIAS)
 
+    # Impede acesso fora do intervalo
+    if dia < 1 or dia > total_dias:
+        return redirect(url_for("treino_semi_pro", dia=1))
+
     conn = sqlite3.connect("varzea.db")
     cur = conn.cursor()
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS treino_checkin (
             user_id INTEGER,
-            dia INTEGER
+            dia INTEGER,
+            PRIMARY KEY (user_id, dia)
         )
     """)
     conn.commit()
 
     # 🔴 Registrar check-in
     if request.method == "POST":
-        dia = int(request.form["dia"])
         cur.execute("SELECT 1 FROM treino_checkin WHERE user_id=? AND dia=?", (user_id, dia))
         if not cur.fetchone():
             cur.execute("INSERT INTO treino_checkin (user_id, dia) VALUES (?, ?)", (user_id, dia))
@@ -530,16 +503,29 @@ def treino_semi_pro():
     cur.execute("SELECT dia FROM treino_checkin WHERE user_id=?", (user_id,))
     feitos = [row[0] for row in cur.fetchall()]
 
-    # ✅ Se terminou todos os dias, resetar para novo ciclo
+    # ✅ Se terminou todos os dias, resetar o ciclo
     if len(feitos) >= total_dias:
         cur.execute("DELETE FROM treino_checkin WHERE user_id=?", (user_id,))
         conn.commit()
-        feitos = []  # limpa a lista pro template voltar verde
+        feitos = []
         flash("🏁 Parabéns! Você completou os 21 dias e o ciclo foi reiniciado. Bora de novo?", "success")
 
     conn.close()
 
-    return render_template("treino_semi_pro.html", treinos=TREINO_21_DIAS, feitos=feitos)
+    # Define treino atual
+    treino = TREINO_21_DIAS[dia - 1]
+    anterior = dia - 1 if dia > 1 else None
+    proximo = dia + 1 if dia < total_dias else None
+
+    feito = dia in feitos
+
+    return render_template(
+        "treino_semi_pro.html",
+        treino=treino,
+        anterior=anterior,
+        proximo=proximo,
+        feito=feito
+    )
     
 @app.route("/checkin", methods=["POST"])
 @login_required
