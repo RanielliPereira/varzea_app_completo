@@ -467,43 +467,34 @@ def dashboard():
 #@login_required
 #def treinos_intermediario():
     #return render_template("treinos_intermediario.html", treinos=TREINO_21_DIAS)
-   
-@app.route("/treino_semi_pro/<int:dia>", methods=["GET", "POST"])
-def treino_semi_pro(dia):
-    if "user_id" not in session:
+@app.route("/treino_semi_pro", methods=["GET", "POST"])
+def treino_semi_pro():
+    if "uid" not in session:
         return redirect("/login")
 
-    user_id = session["user_id"]
+    user_id = session["uid"]
     total_dias = len(TREINO_21_DIAS)
-
-    # Impede acesso fora do intervalo
-    if dia < 1 or dia > total_dias:
-        return redirect(url_for("treino_semi_pro", dia=1))
 
     conn = sqlite3.connect("varzea.db")
     cur = conn.cursor()
-
     cur.execute("""
         CREATE TABLE IF NOT EXISTS treino_checkin (
             user_id INTEGER,
-            dia INTEGER,
-            PRIMARY KEY (user_id, dia)
+            dia INTEGER
         )
     """)
     conn.commit()
 
-    # 🔴 Registrar check-in
     if request.method == "POST":
+        dia = int(request.form["dia"])
         cur.execute("SELECT 1 FROM treino_checkin WHERE user_id=? AND dia=?", (user_id, dia))
         if not cur.fetchone():
             cur.execute("INSERT INTO treino_checkin (user_id, dia) VALUES (?, ?)", (user_id, dia))
             conn.commit()
 
-    # 🟢 Buscar dias concluídos
     cur.execute("SELECT dia FROM treino_checkin WHERE user_id=?", (user_id,))
     feitos = [row[0] for row in cur.fetchall()]
 
-    # ✅ Se terminou todos os dias, resetar o ciclo
     if len(feitos) >= total_dias:
         cur.execute("DELETE FROM treino_checkin WHERE user_id=?", (user_id,))
         conn.commit()
@@ -512,20 +503,7 @@ def treino_semi_pro(dia):
 
     conn.close()
 
-    # Define treino atual
-    treino = TREINO_21_DIAS[dia - 1]
-    anterior = dia - 1 if dia > 1 else None
-    proximo = dia + 1 if dia < total_dias else None
-
-    feito = dia in feitos
-
-    return render_template(
-        "treino_semi_pro.html",
-        treino=treino,
-        anterior=anterior,
-        proximo=proximo,
-        feito=feito
-    )
+    return render_template("treino_semi_pro.html", treinos=TREINO_21_DIAS, feitos=feitos)
     
 @app.route("/checkin", methods=["POST"])
 @login_required
@@ -841,6 +819,65 @@ def peso_grafico():
     pesos = [row["weight_kg"] for row in data]
 
     return render_template("peso_grafico.html", labels=labels, pesos=pesos)
+    
+@app.route("/treino_semi_pro/<int:dia>", methods=["GET", "POST"])
+def treino_semi_pro(dia):
+    if "user_id" not in session:
+        return redirect("/login")
+
+    user_id = session["user_id"]
+    total_dias = len(TREINO_21_DIAS)
+
+    # Impede acesso fora do intervalo
+    if dia < 1 or dia > total_dias:
+        return redirect(url_for("treino_semi_pro", dia=1))
+
+    conn = sqlite3.connect("varzea.db")
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS treino_checkin (
+            user_id INTEGER,
+            dia INTEGER,
+            PRIMARY KEY (user_id, dia)
+        )
+    """)
+    conn.commit()
+
+    # 🔴 Registrar check-in
+    if request.method == "POST":
+        cur.execute("SELECT 1 FROM treino_checkin WHERE user_id=? AND dia=?", (user_id, dia))
+        if not cur.fetchone():
+            cur.execute("INSERT INTO treino_checkin (user_id, dia) VALUES (?, ?)", (user_id, dia))
+            conn.commit()
+
+    # 🟢 Buscar dias concluídos
+    cur.execute("SELECT dia FROM treino_checkin WHERE user_id=?", (user_id,))
+    feitos = [row[0] for row in cur.fetchall()]
+
+    # ✅ Se terminou todos os dias, resetar o ciclo
+    if len(feitos) >= total_dias:
+        cur.execute("DELETE FROM treino_checkin WHERE user_id=?", (user_id,))
+        conn.commit()
+        feitos = []
+        flash("🏁 Parabéns! Você completou os 21 dias e o ciclo foi reiniciado. Bora de novo?", "success")
+
+    conn.close()
+
+    # Define treino atual
+    treino = TREINO_21_DIAS[dia - 1]
+    anterior = dia - 1 if dia > 1 else None
+    proximo = dia + 1 if dia < total_dias else None
+
+    feito = dia in feitos
+
+    return render_template(
+        "treino_semi_pro.html",
+        treino=treino,
+        anterior=anterior,
+        proximo=proximo,
+        feito=feito
+    )
     
 @app.route("/treino/<int:treino_id>", methods=["GET", "POST"])
 @login_required
