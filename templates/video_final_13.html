@@ -1,53 +1,46 @@
-{% extends "base.html" %}
-{% block content %}
-<style>
-  .video-box {
-    max-width: 700px;
-    margin: 60px auto;
-    background: #fff;
-    padding: 30px;
-    border-radius: 20px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.1);
-    text-align: center;
-  }
-
-  video {
-    width: 100%;
-    border-radius: 15px;
-    margin-bottom: 20px;
-  }
-
-  .msg-final {
-    font-size: 1.2rem;
-    color: #16a34a;
-    font-weight: bold;
-  }
-
-  .btn-voltar {
-    display: inline-block;
-    margin-top: 20px;
-    padding: 12px 25px;
-    background-color: #16a34a;
-    color: white;
-    border-radius: 10px;
-    text-decoration: none;
-    font-weight: bold;
-  }
-
-  .btn-voltar:hover {
-    background-color: #15803d;
-  }
-</style>
-
-<div class="video-box">
-  <h2>🔥 Parabéns, guerreiro! 🔥</h2>
-  <p>Você concluiu os 13 dias de treino com raça e determinação! 💪</p>
-
-  <video controls autoplay>
-    <source src="{{ url_for('static', filename='videos/motivacao13.mp4') }}" type="video/mp4">
-    Seu navegador não suporta vídeos.
-  </video>
-<div class="msg">👊 Continue firme! O ciclo foi reiniciado. Bora pra cima!</div>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Parabéns!</title>
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 30px;
+        }
+        video {
+            width: 90%;
+            max-width: 700px;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+        .msg {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #ffd700;
+        }
+        a {
+            display: inline-block;
+            margin-top: 25px;
+            color: #fff;
+            background: #28a745;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔥 PARABÉNS GUERREIRO 🔥</h1>
+    <p>Você concluiu os 13 dias de treino!</p>
+    <video controls autoplay>
+        <source src="{{ url_for('static', filename='videos/motivacao13.mp4') }}" type="video/mp4">
+        Seu navegador não suporta vídeos.
+    </video>
+    <div class="msg">👊 Continue firme! O ciclo foi reiniciado. Bora pra cima!</div>
     <a href="/treino_individual">Recomeçar os treinos</a>
 </body>
 </html>

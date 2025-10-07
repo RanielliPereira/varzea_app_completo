@@ -929,12 +929,22 @@ def treino_individual(treino_id):
         proximo=proximo,
         feito=feito
     )
-    
 @app.route("/video_final_13")
-@login_required
 def video_final_13():
+    if "uid" not in session:
+        return redirect("/login")
+
+    user_id = session["uid"]
+
+    # Limpa os check-ins (reinicia os treinos)
+    conn = sqlite3.connect("varzea.db")
+    cur = conn.cursor()
+    cur.execute("DELETE FROM treino_checkin WHERE user_id=?", (user_id,))
+    conn.commit()
+    conn.close()
+
     return render_template("video_final_13.html")
-  
+    
 @app.route("/pre_jogo")
 @login_required
 def pre_jogo():
