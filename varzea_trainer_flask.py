@@ -491,7 +491,7 @@ def treino_semi_pro():
     conn = sqlite3.connect("varzea.db")
     cur = conn.cursor()
 
-    # 🔧 Cria tabela se não existir
+    # Cria tabela se não existir
     cur.execute("""
         CREATE TABLE IF NOT EXISTS treino_checkin (
             user_id INTEGER,
@@ -500,9 +500,10 @@ def treino_semi_pro():
     """)
     conn.commit()
 
-    # 🔴 Check-in (corrigido)
+    # --- Quando o usuário faz check-in
     if request.method == "POST":
         treino_id_post = int(request.form.get("treino_id", treino_id))
+
         cur.execute(
             "SELECT 1 FROM treino_checkin WHERE user_id=? AND treino_id=?",
             (user_id, treino_id_post)
@@ -513,30 +514,22 @@ def treino_semi_pro():
                 (user_id, treino_id_post)
             )
             conn.commit()
-            flash("✅ Check-in realizado com sucesso!", "success")
+
+        # ✅ Se for o último treino, vai direto para o vídeo final
+        if treino_id_post >= total_dias:
+            return redirect(url_for("video_final"))
 
         return redirect(url_for("treino_semi_pro", treino_id=treino_id_post))
 
-    # 🟢 Busca treinos feitos
+    # --- Busca os treinos feitos
     cur.execute("SELECT treino_id FROM treino_checkin WHERE user_id=?", (user_id,))
     feitos = [row[0] for row in cur.fetchall()]
-
-    # ✅ Reset se o usuário terminou todos
-    if len(feitos) >= total_dias:
-        cur.execute("DELETE FROM treino_checkin WHERE user_id=?", (user_id,))
-        conn.commit()
-        feitos = []
-        flash("🏁 Parabéns! Você completou os 21 dias. O ciclo foi reiniciado! 👊", "success")
-
     conn.close()
 
-    # 🔢 Pega treino atual
+    # --- Dados do treino atual
     treino = TREINO_SEMI_PRO[treino_id - 1]
-
-    # Navegação
     anterior = treino_id - 1 if treino_id > 1 else None
     proximo = treino_id + 1 if treino_id < total_dias else None
-
     feito = treino_id in feitos
 
     return render_template(
@@ -546,6 +539,25 @@ def treino_semi_pro():
         proximo=proximo,
         feito=feito
     )
+
+
+# --- NOVA ROTA: Vídeo final motivacional
+@app.route("/video_final")
+def video_final():
+    if "uid" not in session:
+        return redirect("/login")
+
+    user_id = session["uid"]
+
+    # Limpa os check-ins (reinicia os treinos)
+    conn = sqlite3.connect("varzea.db")
+    cur = conn.cursor()
+    cur.execute("DELETE FROM treino_checkin WHERE user_id=?", (user_id,))
+    conn.commit()
+    conn.close()
+
+    return render_template("video_final.html")
+
     
 
 @app.route("/checkin", methods=["POST"])
@@ -874,7 +886,7 @@ def treino_individual(treino_id):
     with get_db() as conn:
         cur = conn.cursor()
 
-        # ✅ Se for POST, faz o check-in
+        # ✅ Check-in
         if request.method == "POST":
             cur.execute(
                 "INSERT INTO checkins (user_id, treino) VALUES (?, ?)",
@@ -884,29 +896,31 @@ def treino_individual(treino_id):
             flash("✅ Check-in salvo com sucesso!", "success")
             return redirect(url_for("treino_individual", treino_id=treino_id))
 
-        # ✅ Verifica quais treinos já foram feitos
+        # ✅ Treinos feitos
         feitos = cur.execute(
             "SELECT treino FROM checkins WHERE user_id=?",
             (user_id,)
         ).fetchall()
-
-        feitos = [f[0] for f in feitos]  # converte lista de tuplas em lista simples
+        feitos = [f[0] for f in feitos]
         feito = f"treino_{treino_id}" in feitos
 
-        # ✅ Reset automático ao terminar todos os treinos
+        # ✅ Se completou todos os 13 dias, redireciona pro vídeo motivacional
         if len(feitos) >= total_dias:
+            # limpa os check-ins
             cur.execute("DELETE FROM checkins WHERE user_id=?", (user_id,))
             conn.commit()
-            feitos = []
-            flash("🏁 Parabéns! Você completou todos os treinos. O ciclo foi reiniciado! 👊", "success")
 
-    # ✅ Busca o treino atual
+            # redireciona direto pro vídeo
+            flash("🏁 Parabéns! Você concluiu os 13 dias de treino. Assista o vídeo de motivação 👊", "success")
+            return redirect(url_for("video_final_13"))
+
+    # ✅ Treino atual
     treino = next((t for t in TREINOS if t["id"] == treino_id), None)
     if not treino:
         abort(404)
 
     anterior = treino_id - 1 if treino_id > 1 else None
-    proximo = treino_id + 1 if treino_id < len(TREINOS) else None
+    proximo = treino_id + 1 if treino_id < total_dias else None
 
     return render_template(
         "treino_individual.html",
@@ -915,6 +929,11 @@ def treino_individual(treino_id):
         proximo=proximo,
         feito=feito
     )
+    
+@app.route("/video_final_13")
+@login_required
+def video_final_13():
+    return render_template("video_final_13.html")
   
 @app.route("/pre_jogo")
 @login_required
