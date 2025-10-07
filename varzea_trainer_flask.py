@@ -35,60 +35,68 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
+
+DB_PATH = "varzea.db"
+
 def init_db():
-    conn = get_db()
-    cur = conn.cursor()
+    # Só cria o banco se ele ainda não existir
+    if not os.path.exists(DB_PATH):
+        print("🔧 Criando banco de dados pela primeira vez...")
+        conn = sqlite3.connect(DB_PATH)
+        cur = conn.cursor()
 
-    # Tabela de usuários
-    conn = sqlite3.connect("seu_banco.db")
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-)
-""")
+        # Usuários
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
 
+        # Perfil
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS profile (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER UNIQUE,
+                age INTEGER,
+                height_m REAL,
+                weight_kg REAL,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
 
-    # Perfil do usuário
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS profile(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER UNIQUE,
-            age INTEGER,
-            height_m REAL,
-            weight_kg REAL,
-            FOREIGN KEY(user_id) REFERENCES users(id)
-        )
-    """)
+        # Check-ins de treino
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS checkins (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                treino TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
 
-    # Check-ins de treinos
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS checkins(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            treino TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY(user_id) REFERENCES users(id)
-        )
-    """)
+        # Histórico de peso diário
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS weight_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                weight_kg REAL NOT NULL,
+                log_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
 
-    # Histórico de peso diário
-    # ⚠️  A coluna 'log_date' é usada no template, então criamos com esse nome
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS weight_log(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            weight_kg REAL NOT NULL,
-            log_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY(user_id) REFERENCES users(id)
-        )
-    """)
-
-    conn.commit()
-    conn.close()
+        conn.commit()
+        conn.close()
+        print("✅ Banco criado com sucesso!")
+    else:
+        print("📁 Banco já existente — usando o atual.")
+        
+init_db()
 
 def send_reset_email(to_email):
     if not app.config["MAIL_USERNAME"] or not app.config["MAIL_PASSWORD"]:
