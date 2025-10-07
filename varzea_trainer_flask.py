@@ -466,17 +466,21 @@ def dashboard():
 #@app.route("/treinos_intermediario")
 #@login_required
 #def treinos_intermediario():
-    #return render_template("treinos_intermediario.html", treinos=TREINO_21_DIAS)
+    #return render_template
+# --- TREINO SEMI PRO (21 DIAS) ---
 @app.route("/treino_semi_pro", methods=["GET", "POST"])
 def treino_semi_pro():
     if "uid" not in session:
         return redirect("/login")
 
     user_id = session["uid"]
+    treino_id = request.args.get("treino_id", default=1, type=int)
     total_dias = len(TREINO_SEMI_PRO)
 
     conn = sqlite3.connect("varzea.db")
     cur = conn.cursor()
+
+    # 🔧 Cria tabela se não existir
     cur.execute("""
         CREATE TABLE IF NOT EXISTS treino_checkin (
             user_id INTEGER,
@@ -485,28 +489,52 @@ def treino_semi_pro():
     """)
     conn.commit()
 
-    # Registrar check-in
+    # 🔴 Check-in (corrigido)
     if request.method == "POST":
-        treino_id = int(request.form["treino_id"])
-        cur.execute("SELECT 1 FROM treino_checkin WHERE user_id=? AND treino_id=?", (user_id, treino_id))
+        treino_id_post = int(request.form.get("treino_id", treino_id))
+        cur.execute(
+            "SELECT 1 FROM treino_checkin WHERE user_id=? AND treino_id=?",
+            (user_id, treino_id_post)
+        )
         if not cur.fetchone():
-            cur.execute("INSERT INTO treino_checkin (user_id, treino_id) VALUES (?, ?)", (user_id, treino_id))
+            cur.execute(
+                "INSERT INTO treino_checkin (user_id, treino_id) VALUES (?, ?)",
+                (user_id, treino_id_post)
+            )
             conn.commit()
+            flash("✅ Check-in realizado com sucesso!", "success")
 
-    # Buscar check-ins
+        return redirect(url_for("treino_semi_pro", treino_id=treino_id_post))
+
+    # 🟢 Busca treinos feitos
     cur.execute("SELECT treino_id FROM treino_checkin WHERE user_id=?", (user_id,))
     feitos = [row[0] for row in cur.fetchall()]
 
-    # Resetar ciclo quando termina
+    # ✅ Reset se o usuário terminou todos
     if len(feitos) >= total_dias:
         cur.execute("DELETE FROM treino_checkin WHERE user_id=?", (user_id,))
         conn.commit()
         feitos = []
-        flash("🏁 Parabéns! Você completou os 21 dias e o ciclo foi reiniciado!", "success")
+        flash("🏁 Parabéns! Você completou os 21 dias. O ciclo foi reiniciado! 👊", "success")
 
     conn.close()
 
-    return render_template("treino_semi_pro.html", treinos=TREINO_SEMI_PRO, feitos=feitos)
+    # 🔢 Pega treino atual
+    treino = TREINO_SEMI_PRO[treino_id - 1]
+
+    # Navegação
+    anterior = treino_id - 1 if treino_id > 1 else None
+    proximo = treino_id + 1 if treino_id < total_dias else None
+
+    feito = treino_id in feitos
+
+    return render_template(
+        "treino_semi_pro.html",
+        treino=treino,
+        anterior=anterior,
+        proximo=proximo,
+        feito=feito
+    )
     
 
 @app.route("/checkin", methods=["POST"])
@@ -824,29 +852,43 @@ def peso_grafico():
 
     return render_template("peso_grafico.html", labels=labels, pesos=pesos)
    
-    
+
 @app.route("/treino/<int:treino_id>", methods=["GET", "POST"])
 @login_required
 def treino_individual(treino_id):
-    if request.method == "POST":
-        # salva check-in
-        with get_db() as conn:
-            conn.execute(
+    user_id = session["uid"]
+    total_dias = len(TREINOS)
+
+    with get_db() as conn:
+        cur = conn.cursor()
+
+        # ✅ Se for POST, faz o check-in
+        if request.method == "POST":
+            cur.execute(
                 "INSERT INTO checkins (user_id, treino) VALUES (?, ?)",
-                (session["uid"], f"treino_{treino_id}")
+                (user_id, f"treino_{treino_id}")
             )
             conn.commit()
-        flash("Check-in salvo!")
-        return redirect(url_for("treino_individual", treino_id=treino_id))
+            flash("✅ Check-in salvo com sucesso!", "success")
+            return redirect(url_for("treino_individual", treino_id=treino_id))
 
-    # verifica se já foi feito
-    with get_db() as conn:
-        feito = conn.execute(
-            "SELECT 1 FROM checkins WHERE user_id=? AND treino=?",
-            (session["uid"], f"treino_{treino_id}")
-        ).fetchone() is not None
+        # ✅ Verifica quais treinos já foram feitos
+        feitos = cur.execute(
+            "SELECT treino FROM checkins WHERE user_id=?",
+            (user_id,)
+        ).fetchall()
 
-    # pega o treino pelo id
+        feitos = [f[0] for f in feitos]  # converte lista de tuplas em lista simples
+        feito = f"treino_{treino_id}" in feitos
+
+        # ✅ Reset automático ao terminar todos os treinos
+        if len(feitos) >= total_dias:
+            cur.execute("DELETE FROM checkins WHERE user_id=?", (user_id,))
+            conn.commit()
+            feitos = []
+            flash("🏁 Parabéns! Você completou todos os treinos. O ciclo foi reiniciado! 👊", "success")
+
+    # ✅ Busca o treino atual
     treino = next((t for t in TREINOS if t["id"] == treino_id), None)
     if not treino:
         abort(404)
@@ -861,7 +903,7 @@ def treino_individual(treino_id):
         proximo=proximo,
         feito=feito
     )
-    
+  
 @app.route("/pre_jogo")
 @login_required
 def pre_jogo():
