@@ -40,14 +40,17 @@ def init_db():
     cur = conn.cursor()
 
     # Tabela de usuários
+    conn = sqlite3.connect("seu_banco.db")
     cur.execute("""
-        CREATE TABLE IF NOT EXISTS users(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL
-        )
-    """)
+        CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)
+""")
+
 
     # Perfil do usuário
     cur.execute("""
@@ -741,7 +744,6 @@ def medidas():
 
     return render_template("medidas.html", inicial=inicial, ultima=ultima)
     
-    
 @app.route("/peso_diario", methods=["POST"])
 def peso_diario():
     user_id = session.get("uid")
@@ -763,14 +765,17 @@ def peso_diario():
     now_local = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row  # ✅ permite acessar por nome da coluna
         cur = conn.cursor()
+
+        # Salva o peso
         cur.execute(
             "INSERT INTO weight_log (user_id, weight_kg, log_date) VALUES (?, ?, ?)",
             (user_id, p, now_local)
         )
         conn.commit()
 
-        # Verifica perfil para calcular IMC
+        # Busca perfil do usuário
         prof = conn.execute("SELECT * FROM profile WHERE user_id=?", (user_id,)).fetchone()
         if prof and prof["height_m"]:
             h = float(prof["height_m"])
@@ -783,8 +788,7 @@ def peso_diario():
 
     flash("Peso salvo com sucesso!")
     return redirect(url_for("perfil"))
-    
-    
+   
 @app.route("/comparativo")
 @login_required
 def comparativo():
