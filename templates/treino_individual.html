@@ -22,16 +22,19 @@
 
     <!-- Botão de voltar ao Dashboard -->
     <div class="back-center">
-      <a href="{{ url_for('dashboard') }}" class="back-btn">⬅️ Voltar ao Menu</a>
+      <a href="{{ url_for('dashboard') }}" class="back-btn"> 🔄
+      Voltar ao Menu</a>
     </div>
 
     <!-- Navegação entre treinos -->
     <div class="nav-treinos">
       {% if anterior %}
-        <a class="btn" href="{{ url_for('treino_individual', treino_id=anterior) }}">⬅ Anterior</a>
+        <a class="btn" href="{{ url_for('treino_individual', treino_id=anterior) }}"> ⬅️
+        Anterior</a>
       {% endif %}
       {% if proximo %}
-        <a class="btn" href="{{ url_for('treino_individual', treino_id=proximo) }}">Próximo ➡</a>
+        <a class="btn" href="{{ url_for('treino_individual', treino_id=proximo) }}">➡️
+        Próximo</a>
       {% endif %}
     </div>
   </div>
@@ -96,7 +99,7 @@
     }
 
     .back-btn {
-      background-color: #16a34a;
+      background-color: #3c3c3c;
       color: white;
       text-decoration: none;
       padding: 10px 20px;
