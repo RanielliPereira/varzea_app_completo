@@ -95,6 +95,16 @@ def init_db():
                 FOREIGN KEY(user_id) REFERENCES users(id)
             )
         """)
+    
+    # Tabela de check-in dos treinos
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS checkin (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            plano TEXT NOT NULL,
+            data DATE NOT NULL
+        );
+    """)
 
         # Histórico de peso diário
         cur.execute("""
@@ -536,7 +546,7 @@ def treino_semi_pro():
     conn = sqlite3.connect("varzea.db")
     cur = conn.cursor()
 
-    # Cria tabela se não existir
+    # ✅ Garante que a tabela de check-ins específicos do plano semi_pro existe
     cur.execute("""
         CREATE TABLE IF NOT EXISTS treino_checkin (
             user_id INTEGER,
@@ -545,33 +555,45 @@ def treino_semi_pro():
     """)
     conn.commit()
 
-    # --- Quando o usuário faz check-in
+    # --- 🟢 Quando o usuário faz check-in
     if request.method == "POST":
         treino_id_post = int(request.form.get("treino_id", treino_id))
 
+        # Verifica se já fez check-in
         cur.execute(
             "SELECT 1 FROM treino_checkin WHERE user_id=? AND treino_id=?",
             (user_id, treino_id_post)
         )
-        if not cur.fetchone():
+        ja_fez = cur.fetchone()
+
+        # Se ainda não fez check-in, insere
+        if not ja_fez:
+            # Marca o treino na tabela específica
             cur.execute(
-             "INSERT INTO checkins (user_id, treino, plano) VALUES (?, ?, ?)",
-             (user_id, f"treino_{treino_id}", "semi_pro")
-          )
+                "INSERT INTO treino_checkin (user_id, treino_id) VALUES (?, ?)",
+                (user_id, treino_id_post)
+            )
+            # Também registra no histórico geral (tabela checkin)
+            cur.execute(
+                "INSERT INTO checkins (user_id, treino, plano) VALUES (?, ?, ?)",
+                (user_id, f"treino_{treino_id_post}", "semi_pro")
+            )
             conn.commit()
 
-        # ✅ Se for o último treino, vai direto para o vídeo final
+        # ✅ Se for o último treino, redireciona pro vídeo final
         if treino_id_post >= total_dias:
+            conn.close()
             return redirect(url_for("video_final"))
 
+        conn.close()
         return redirect(url_for("treino_semi_pro", treino_id=treino_id_post))
 
-    # --- Busca os treinos feitos
+    # --- 📊 Busca os treinos feitos
     cur.execute("SELECT treino_id FROM treino_checkin WHERE user_id=?", (user_id,))
     feitos = [row[0] for row in cur.fetchall()]
     conn.close()
 
-    # --- Dados do treino atual
+    # --- 📌 Dados do treino atual
     treino = TREINO_SEMI_PRO[treino_id - 1]
     anterior = treino_id - 1 if treino_id > 1 else None
     proximo = treino_id + 1 if treino_id < total_dias else None
@@ -586,7 +608,7 @@ def treino_semi_pro():
     )
 
 
-# --- NOVA ROTA: Vídeo final motivacional
+# --- 🏁 NOVA ROTA: Vídeo final motivacional
 @app.route("/video_final")
 def video_final():
     if "uid" not in session:
@@ -594,7 +616,7 @@ def video_final():
 
     user_id = session["uid"]
 
-    # Limpa os check-ins (reinicia os treinos)
+    # 🔁 Limpa os check-ins desse usuário (reinicia o progresso)
     conn = sqlite3.connect("varzea.db")
     cur = conn.cursor()
     cur.execute("DELETE FROM treino_checkin WHERE user_id=?", (user_id,))
@@ -603,6 +625,77 @@ def video_final():
 
     return render_template("video_final.html")
 
+    
+@app.route("/treino/<int:treino_id>", methods=["GET", "POST"])
+@login_required
+def treino_individual(treino_id):
+    user_id = session["uid"]
+    total_dias = len(TREINOS)
+
+    with get_db() as conn:
+        cur = conn.cursor()
+
+        # ✅ Verifica se já fez check-in neste treino
+        ja_fez = cur.execute(
+            "SELECT 1 FROM checkins WHERE user_id=? AND treino=? AND plano=?",
+            (user_id, f"treino_{treino_id}", "amador")
+        ).fetchone()
+
+        # ✅ Quando o jogador faz check-in
+        if request.method == "POST" and not ja_fez:
+            cur.execute(
+                "INSERT INTO checkins (user_id, treino, plano) VALUES (?, ?, ?)",
+                (user_id, f"treino_{treino_id}", "amador")
+            )
+            conn.commit()
+            flash("✅ Check-in salvo com sucesso!", "success")
+            return redirect(url_for("treino_individual", treino_id=treino_id))
+
+        # --- Busca todos os treinos feitos pelo usuário
+        feitos = cur.execute(
+            "SELECT treino FROM checkins WHERE user_id=? AND plano=?",
+            (user_id, "amador")
+        ).fetchall()
+        feitos = [f[0] for f in feitos]
+        feito = f"treino_{treino_id}" in feitos
+
+        # ✅ Quando o jogador completa TODOS os treinos do plano
+        if len(feitos) >= total_dias:
+            # limpa os check-ins do usuário no plano amador
+            cur.execute("DELETE FROM checkins WHERE user_id=? AND plano=?", (user_id, "amador"))
+            conn.commit()
+
+            flash("🏁 Parabéns! Você concluiu os 13 dias de treino. Assista ao vídeo de motivação 👊", "success")
+            return redirect(url_for("video_final_13"))
+
+    # ✅ Busca o treino atual pelo ID
+    treino = next((t for t in TREINOS if t["id"] == treino_id), None)
+    if not treino:
+        abort(404)
+
+    anterior = treino_id - 1 if treino_id > 1 else None
+    proximo = treino_id + 1 if treino_id < total_dias else None
+
+    return render_template(
+        "treino_individual.html",
+        treino=treino,
+        anterior=anterior,
+        proximo=proximo,
+        feito=feito
+    )
+    
+    
+@app.route("/video_final_13")
+@login_required
+def video_final_13():
+    user_id = session["uid"]
+    with get_db() as conn:
+        cur = conn.cursor()
+        # 🧹 Garante que os check-ins do plano amador estão limpos
+        cur.execute("DELETE FROM checkins WHERE user_id=? AND plano=?", (user_id, "amador"))
+        conn.commit()
+
+    return render_template("video_final_13.html")
     
 
 @app.route("/checkin", methods=["POST"])
@@ -921,70 +1014,7 @@ def peso_grafico():
 
     return render_template("peso_grafico.html", labels=labels, pesos=pesos)
    
-@app.route("/treino/<int:treino_id>", methods=["GET", "POST"])
-@login_required
-def treino_individual(treino_id):
-    user_id = session["uid"]
-    total_dias = len(TREINOS)
 
-    with get_db() as conn:
-        cur = conn.cursor()
-
-        # ✅ Salva o check-in quando o treino for concluído
-        if request.method == "POST":
-            cur.execute(
-             "INSERT INTO checkins (user_id, treino, plano) VALUES (?, ?, ?)",
-              (user_id, f"treino_{treino_id}", "amador")
-)
-            conn.commit()
-            flash("✅ Check-in salvo com sucesso!", "success")
-            return redirect(url_for("treino_individual", treino_id=treino_id))
-
-        # ✅ Busca todos os treinos já feitos pelo usuário
-        feitos = cur.execute(
-            "SELECT treino FROM checkins WHERE user_id=?",
-            (user_id,)
-        ).fetchall()
-        feitos = [f[0] for f in feitos]
-        feito = f"treino_{treino_id}" in feitos
-
-        # ✅ Se completou todos os treinos, limpa e redireciona para o vídeo final
-        if len(feitos) >= total_dias:
-            # limpa os check-ins do usuário
-            cur.execute("DELETE FROM checkins WHERE user_id=?", (user_id,))
-            conn.commit()
-
-            flash("🏁 Parabéns! Você concluiu os 13 dias de treino. Assista o vídeo de motivação 👊", "success")
-            return redirect(url_for("video_final_13"))
-
-    # ✅ Busca o treino atual pelo ID
-    treino = next((t for t in TREINOS if t["id"] == treino_id), None)
-    if not treino:
-        abort(404)
-
-    anterior = treino_id - 1 if treino_id > 1 else None
-    proximo = treino_id + 1 if treino_id < total_dias else None
-
-    return render_template(
-        "treino_individual.html",
-        treino=treino,
-        anterior=anterior,
-        proximo=proximo,
-        feito=feito
-    )
-    
-
-@app.route("/video_final_13")
-@login_required
-def video_final_13():
-    user_id = session["uid"]
-    with get_db() as conn:
-        cur = conn.cursor()
-        # limpa a tabela certa
-        cur.execute("DELETE FROM checkins WHERE user_id=?", (user_id,))
-        conn.commit()
-
-    return render_template("video_final_13.html")
     
     
 @app.route("/pre_jogo")

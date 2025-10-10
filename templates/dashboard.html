@@ -44,8 +44,13 @@ body.dashboard-page {
     margin-bottom: 2vh;
     text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
 }
+h3 {
+    margin-top: 20px;
+    font-size: clamp(20px, 4vw, 28px);
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+}
 .progress-container {
-    margin: 20px auto;
+    margin: 15px auto;
     background: rgba(255, 255, 255, 0.2);
     border-radius: 30px;
     height: 28px;
@@ -66,6 +71,13 @@ body.dashboard-page {
     font-size: clamp(16px, 3.5vw, 22px);
     font-weight: bold;
     text-shadow: 1px 1px 5px rgba(0,0,0,0.7);
+}
+.reinicio {
+    color: #2ecc40;
+    font-size: clamp(14px, 3vw, 18px);
+    margin-top: 5px;
+    font-weight: bold;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.6);
 }
 .btn {
     display: inline-block;
@@ -125,15 +137,21 @@ body.dashboard-page {
         <div class="progress-text">
             {{ feitos_amador }} / {{ total_amador }} dias ({{ progresso_amador|round(1) }}%)
         </div>
+        {% if feitos_amador == 0 %}
+        <div class="reinicio">🏁 Plano Amador reiniciado!</div>
+        {% endif %}
 
         <!-- Progresso Semi-Pro -->
-        <h3 style="margin-top: 30px;">Plano Semi-Pro (21 dias)</h3>
+        <h3>Plano Semi-Pro (21 dias)</h3>
         <div class="progress-container">
             <div class="progress-bar" id="progress-bar-semi"></div>
         </div>
         <div class="progress-text">
             {{ feitos_semi }} / {{ total_semi }} dias ({{ progresso_semi|round(1) }}%)
         </div>
+        {% if feitos_semi == 0 %}
+        <div class="reinicio">🔥 Plano Semi-Pro reiniciado!</div>
+        {% endif %}
 
         <!-- Botões -->
         <a class="btn" href="{{ url_for('treino_individual', treino_id=1) }}">⚽ Iniciar Amador</a>
