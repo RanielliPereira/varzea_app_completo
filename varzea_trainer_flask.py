@@ -554,55 +554,54 @@ def treino_semi_pro():
 
     # ✅ Garante que a tabela existe
     cur.execute("""
-        CREATE TABLE IF NOT EXISTS treino_checkin (
+        CREATE TABLE IF NOT EXISTS checkins (
             user_id INTEGER,
-            treino_id INTEGER
+            treino TEXT,
+            plano TEXT
         )
     """)
     conn.commit()
 
-    # ✅ Se o usuário fez check-in
+    # --- 🟢 Quando o usuário faz check-in
     if request.method == "POST":
         treino_id_post = int(request.form.get("treino_id", treino_id))
 
+        # Verifica se já fez check-in
         cur.execute(
-            "SELECT 1 FROM treino_checkin WHERE user_id=? AND treino_id=?",
-            (user_id, treino_id_post)
+            "SELECT 1 FROM checkins WHERE user_id=? AND treino=? AND plano=?",
+            (user_id, f"treino_{treino_id_post}", "semi_pro")
         )
-        ja_fez = cur.fetchone()
 
-        if not ja_fez:
+        if not cur.fetchone():
             cur.execute(
-                "INSERT INTO treino_checkin (user_id, treino_id) VALUES (?, ?)",
-                (user_id, treino_id_post)
+                "INSERT INTO checkins (user_id, treino, plano) VALUES (?, ?, ?)",
+                (user_id, f"treino_{treino_id_post}", "semi_pro")
             )
             conn.commit()
 
-        # ✅ Verifica se concluiu todos os treinos
-        cur.execute("SELECT COUNT(*) FROM treino_checkin WHERE user_id=?", (user_id,))
-        feitos = cur.fetchone()[0]
-
-        if feitos >= total_dias:
-            # 🔁 Reseta automaticamente ao terminar o plano
-            cur.execute("DELETE FROM treino_checkin WHERE user_id=?", (user_id,))
+        # ✅ Se for o último treino, redireciona pro vídeo final e reseta
+        if treino_id_post >= total_dias:
+            cur.execute("DELETE FROM checkins WHERE user_id=? AND plano=?", (user_id, "semi_pro"))
             conn.commit()
             conn.close()
-
-            flash("🏁 Parabéns! Você concluiu os 21 dias do plano Semi-Pro! Assista o vídeo final 👊", "success")
-            return redirect(url_for("video_final_semi"))
+            return redirect(url_for("video_final"))
 
         return redirect(url_for("treino_semi_pro", treino_id=treino_id_post + 1))
 
-    # ✅ Busca os treinos já feitos
-    cur.execute("SELECT treino_id FROM treino_checkin WHERE user_id=?", (user_id,))
+    # --- 📊 Busca os treinos feitos
+    cur.execute("SELECT treino FROM checkins WHERE user_id=? AND plano=?", (user_id, "semi_pro"))
     feitos = [row[0] for row in cur.fetchall()]
     conn.close()
 
-    # Dados do treino atual
+    # ✅ Se o treino_id for maior que o total, vai direto pro vídeo final
+    if treino_id > total_dias:
+        return redirect(url_for("video_final"))
+
+    # --- 📌 Dados do treino atual
     treino = TREINO_SEMI_PRO[treino_id - 1]
     anterior = treino_id - 1 if treino_id > 1 else None
     proximo = treino_id + 1 if treino_id < total_dias else None
-    feito = treino_id in feitos
+    feito = f"treino_{treino_id}" in feitos
 
     return render_template(
         "treino_semi_pro.html",
@@ -613,21 +612,22 @@ def treino_semi_pro():
     )
 
 
-@app.route("/video_final_semi")
+# --- NOVA ROTA: Vídeo final do Semi-Pro
+@app.route("/video_final")
 def video_final_semi():
     if "uid" not in session:
         return redirect("/login")
 
     user_id = session["uid"]
+
+    # Limpa os check-ins do plano semi_pro (reinicia a barra)
     conn = sqlite3.connect("varzea.db")
     cur = conn.cursor()
-
-    # 🧹 Limpa o progresso (para reiniciar a barra)
-    cur.execute("DELETE FROM treino_checkin WHERE user_id=?", (user_id,))
+    cur.execute("DELETE FROM checkins WHERE user_id=? AND plano=?", (user_id, "semi_pro"))
     conn.commit()
     conn.close()
 
-    return render_template("video_final_semi.html")
+    return render_template("video_final.html")
 
     
 @app.route("/treino/<int:treino_id>", methods=["GET", "POST"])
