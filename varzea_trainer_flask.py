@@ -48,11 +48,17 @@ mail = Mail(app)
 serializer = URLSafeTimedSerializer(app.secret_key)
 
 def get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = sqlite3.connect("varzea.db")
+    cur = conn.cursor()
+    # ✅ Garante que a coluna 'plano' existe
+    cur.execute("PRAGMA table_info(checkins)")
+    colunas = [row[1] for row in cur.fetchall()]
+    if "plano" not in colunas:
+        cur.execute("ALTER TABLE checkins ADD COLUMN plano TEXT DEFAULT 'amador'")
+        conn.commit()
     return conn
-
-
+    
+    
 DB_PATH = "varzea.db"
 
 def init_db():
