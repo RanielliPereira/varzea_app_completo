@@ -3,9 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>Dashboard - NA RAÇA</title>
-<link rel="stylesheet" href="/static/style.css">
 <style>
-/* --- FUNDO --- */
 body.dashboard-page {
     font-family: Arial, sans-serif;
     background: url("/static/inicial.png") no-repeat center center fixed;
@@ -13,63 +11,71 @@ body.dashboard-page {
     color: white;
     margin: 0;
     padding: 0;
-
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
 }
-
-/* --- CAIXA CENTRAL --- */
 .dash-box {
-    background: rgba(0, 0, 0, 0.7);
-    padding: 6vh 6vw;                 /* mais respiro */
+    background: rgba(0, 0, 0, 0.75);
+    padding: 6vh 6vw;
     border-radius: 24px;
     text-align: center;
-    max-width: 90%;                   /* ocupa quase a tela no mobile */
+    max-width: 90%;
     box-shadow: 0 10px 28px rgba(0,0,0,0.7);
 }
-
-/* --- TÍTULO PRINCIPAL --- */
 .dash-box h1 {
-    font-size: 6vw;                   /* escala com a largura do dispositivo */
-    min-font-size: 42px;              /* nunca menor que 42px */
-    color: #2ecc40;
-    margin-bottom: 2vh;
+    font-size: clamp(70px, 16vw, 110px);
     font-weight: 900;
-    text-shadow: 3px 3px 12px rgba(0,0,0,0.8);
-    letter-spacing: 1px;
+    letter-spacing: 2px;
+    text-shadow: 4px 4px 14px rgba(0,0,0,0.8);
+    color: #2ecc40;
+    margin-bottom: 15px;
 }
-
-/* --- SAUDAÇÃO --- */
-.dash-box h2 {
-    font-size: 4.5vw;
-    min-font-size: 30px;
-    margin-bottom: 2vh;
-    text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
-}
-
-/* --- FRASE MOTIVACIONAL --- */
 .quote {
     font-style: italic;
-    font-size: 3.8vw;
-    min-font-size: 24px;
+    font-size: clamp(22px, 4vw, 30px);
     margin-bottom: 4vh;
     line-height: 1.4;
     text-shadow: 2px 2px 6px rgba(0,0,0,0.6);
 }
-
-/* --- BOTÃO DESTQUE --- */
+.dash-box h2 {
+    font-size: clamp(28px, 5vw, 40px);
+    margin-bottom: 2vh;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+}
+.progress-container {
+    margin: 20px auto;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 30px;
+    height: 28px;
+    width: 100%;
+    max-width: 400px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+}
+.progress-bar {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, #2ecc40, #00bfff);
+    border-radius: 30px;
+    transition: width 1s ease-out;
+}
+.progress-text {
+    margin-top: 10px;
+    font-size: clamp(16px, 3.5vw, 22px);
+    font-weight: bold;
+    text-shadow: 1px 1px 5px rgba(0,0,0,0.7);
+}
 .btn {
     display: inline-block;
     background: #228B22;
     color: white;
     padding: 20px 40px;
-    margin: 20px 0;
+    margin: 25px 0;
     text-decoration: none;
     font-weight: bold;
-    font-size: 4.5vw;
-    min-font-size: 26px;
+    font-size: clamp(22px, 4.5vw, 30px);
     border-radius: 14px;
     box-shadow: 0 6px 15px rgba(0,0,0,0.7);
     transition: 0.3s;
@@ -78,16 +84,13 @@ body.dashboard-page {
     background: #1e7a1e;
     transform: scale(1.07);
 }
-
-/* --- MENU DE ITENS --- */
 .menu {
-    margin-top: 30px;
+    margin-top: 25px;
     display: flex;
     flex-direction: column;
     gap: 18px;
     align-items: center;
 }
-
 .item {
     display: block;
     width: 100%;
@@ -96,8 +99,7 @@ body.dashboard-page {
     padding: 18px;
     text-decoration: none;
     font-weight: bold;
-    font-size: 4vw;
-    min-font-size: 22px;
+    font-size: clamp(18px, 4vw, 24px);
     border-radius: 12px;
     text-align: center;
     box-shadow: 0 5px 12px rgba(0,0,0,0.6);
@@ -111,31 +113,53 @@ body.dashboard-page {
 </head>
 <body class="dashboard-page">
     <div class="dash-box">
-        <h1 style="
-   font-size: clamp(70px,16vw,110px);
-   font-weight:900;
-   letter-spacing:2px;
-   text-shadow:4px 4px 14px rgba(0,0,0,0.8);
-   color:#2ecc40;
-">
-   NA RAÇA
-</h1>
-         <p class="quote">{{ frase }}</p>
+        <h1>NA RAÇA</h1>
+        <p class="quote">{{ frase }}</p>
         <h2>E aí jogador, {{ nome }} 👊</h2>
-       
 
-        <!-- Botão principal -->
-        <a class="btn" href="{{ url_for('treino_individual', treino_id=1) }}">⚽ Treino Amador</a>
+        <!-- Progresso Amador -->
+        <h3>Plano Amador (13 dias)</h3>
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar-amador"></div>
+        </div>
+        <div class="progress-text">
+            {{ feitos_amador }} / {{ total_amador }} dias ({{ progresso_amador|round(1) }}%)
+        </div>
 
-        <!-- Menu -->
+        <!-- Progresso Semi-Pro -->
+        <h3 style="margin-top: 30px;">Plano Semi-Pro (21 dias)</h3>
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar-semi"></div>
+        </div>
+        <div class="progress-text">
+            {{ feitos_semi }} / {{ total_semi }} dias ({{ progresso_semi|round(1) }}%)
+        </div>
+
+        <!-- Botões -->
+        <a class="btn" href="{{ url_for('treino_individual', treino_id=1) }}">⚽ Iniciar Amador</a>
+        <a class="btn" href="{{ url_for('treino_semi_pro', treino_id=1) }}">🔥 Iniciar Semi-Pro</a>
+
         <div class="menu">
             <a class="item" href="/pre_jogo">📋 Pré-jogo</a>
             <a class="item" href="/recuperacao">💆 Pós-jogo</a>
             <a class="item" href="/dieta">🥗 Dieta</a>
             <a class="item" href="/perfil">📊 Peso Ideal</a>
-            <a class="item" href="/treino_semi_pro">🔥 Treino Semi-Pro</a>
             <a class="item" href="/logout">🚪 Sair</a>
         </div>
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const barAmador = document.getElementById("progress-bar-amador");
+            const barSemi = document.getElementById("progress-bar-semi");
+            const widthAmador = {{ progresso_amador|round(1) }};
+            const widthSemi = {{ progresso_semi|round(1) }};
+
+            setTimeout(() => {
+                barAmador.style.width = widthAmador + "%";
+                barSemi.style.width = widthSemi + "%";
+            }, 200);
+        });
+    </script>
 </body>
 </html>

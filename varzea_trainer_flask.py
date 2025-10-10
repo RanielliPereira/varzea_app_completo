@@ -7,7 +7,8 @@ from datetime import datetime
 from zoneinfo import ZoneInfo   # <— importa o fuso horário
 import time
 import pytz
-
+import random
+from flask_login import login_required
 
 
 tz = pytz.timezone("America/Sao_Paulo")
@@ -18,6 +19,22 @@ DB_PATH = os.path.join(APP_DIR, "varzea.db")
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("APP_SECRET", "troca_esse_segredo")
+
+#Lista de frases motivacionais 
+FRASES = [
+    "A vitória começa no treino 💪🔥",
+    "Treine enquanto eles dormem 😎",
+    "Na raça, tudo é possível! 👊",
+    "Disciplina vence o talento!",
+    "Corpo cansado, mente forte 🦾",
+    "Foco, força e fé ⚽🔥",
+    "A excelência é um hábito diário."
+]
+
+# Número total de treinos por plano
+TOTAL_AMADOR = 13
+TOTAL_SEMI_PRO = 21  # Exemplo — ajuste se for outro número
+
 
 # Mail config via env vars
 app.config["MAIL_SERVER"] = os.environ.get("SMTP_HOST", "smtp.gmail.com")
@@ -448,20 +465,48 @@ def reset(token):
             return redirect(url_for("login"))
     return render_template("reset.html")
     
-    
+
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    import random
-    frase = random.choice(MOTIVACOES)
-    checkins_count = 0
-    uid = session.get("uid")
-    if uid:
-        conn = get_db()
-        row = conn.execute("SELECT COUNT(*) as c FROM checkins WHERE user_id=?", (uid,)).fetchone()
-        conn.close()
-        checkins_count = row["c"] if row else 0
-    return render_template("dashboard.html", nome=session.get("name","Jogador"), frase=frase, checkins_count=checkins_count)
+    user_id = session["uid"]
+
+    with get_db() as conn:
+        cur = conn.cursor()
+
+        # Conta treinos feitos no plano AMADOR
+        cur.execute("""
+            SELECT COUNT(*) FROM checkins
+            WHERE user_id=? AND plano='amador'
+        """, (user_id,))
+        feitos_amador = cur.fetchone()[0]
+
+        # Conta treinos feitos no plano SEMI PRO
+        cur.execute("""
+            SELECT COUNT(*) FROM checkins
+            WHERE user_id=? AND plano='semi_pro'
+        """, (user_id,))
+        feitos_semi = cur.fetchone()[0]
+
+    progresso_amador = (feitos_amador / TOTAL_AMADOR) * 100 if TOTAL_AMADOR > 0 else 0
+    progresso_semi = (feitos_semi / TOTAL_SEMI_PRO) * 100 if TOTAL_SEMI_PRO > 0 else 0
+
+    # Frase motivacional aleatória
+    frase = random.choice(FRASES)
+
+    nome = session.get("nome", "Craque")
+
+    return render_template(
+        "dashboard.html",
+        nome=nome,
+        frase=frase,
+        feitos_amador=feitos_amador,
+        total_amador=TOTAL_AMADOR,
+        progresso_amador=progresso_amador,
+        feitos_semi=feitos_semi,
+        total_semi=TOTAL_SEMI_PRO,
+        progresso_semi=progresso_semi
+    )
 
 #@app.route("/treinos")
 #@login_required
@@ -510,9 +555,9 @@ def treino_semi_pro():
         )
         if not cur.fetchone():
             cur.execute(
-                "INSERT INTO treino_checkin (user_id, treino_id) VALUES (?, ?)",
-                (user_id, treino_id_post)
-            )
+             "INSERT INTO checkins (user_id, treino, plano) VALUES (?, ?, ?)",
+             (user_id, f"treino_{treino_id}", "semi_pro")
+          )
             conn.commit()
 
         # ✅ Se for o último treino, vai direto para o vídeo final
@@ -888,9 +933,9 @@ def treino_individual(treino_id):
         # ✅ Salva o check-in quando o treino for concluído
         if request.method == "POST":
             cur.execute(
-                "INSERT INTO checkins (user_id, treino) VALUES (?, ?)",
-                (user_id, f"treino_{treino_id}")
-            )
+             "INSERT INTO checkins (user_id, treino, plano) VALUES (?, ?, ?)",
+              (user_id, f"treino_{treino_id}", "amador")
+)
             conn.commit()
             flash("✅ Check-in salvo com sucesso!", "success")
             return redirect(url_for("treino_individual", treino_id=treino_id))
