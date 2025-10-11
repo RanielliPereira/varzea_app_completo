@@ -881,7 +881,6 @@ def perfil():
         ultima_medida=ultima_medida  # envia para HTML
     )
     
-    
 @app.route("/medidas", methods=["GET", "POST"])
 @login_required
 def medidas():
@@ -900,14 +899,15 @@ def medidas():
 
         conn.execute("""
             INSERT INTO body_measures
-            (user_id, barriga, peito, braco_dir, braco_esq, coxa_dir, coxa_esq, pant_dir, pant_esq)
-            VALUES (?,?,?,?,?,?,?,?,?)
-        """, (user_id, barriga, peito, braco_dir, braco_esq, coxa_dir, coxa_esq, pant_dir, pant_esq))
+            (user_id, barriga, peito, braco_dir, braco_esq, coxa_dir, coxa_esq, pant_dir, pant_esq, created_at)
+            VALUES (?,?,?,?,?,?,?,?,?, datetime('now'))
+        """, (user_id, barriga, peito, braco_dir, braco_esq,
+              coxa_dir, coxa_esq, pant_dir, pant_esq))
         conn.commit()
         flash("✅ Medidas salvas com sucesso!", "success")
         return redirect(url_for("medidas"))
 
-    # Pega a primeira e a última medida para exibir no comparativo
+    # 📊 Pega a primeira e última medida para exibir no comparativo
     inicial = conn.execute("""
         SELECT * FROM body_measures
         WHERE user_id=? ORDER BY created_at ASC LIMIT 1
@@ -919,8 +919,8 @@ def medidas():
     """, (user_id,)).fetchone()
 
     conn.close()
-
     return render_template("medidas.html", inicial=inicial, ultima=ultima)
+    
     
 @app.route("/peso_diario", methods=["POST"])
 def peso_diario():
