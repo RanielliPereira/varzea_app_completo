@@ -1,44 +1,195 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <title>Evolução de Peso</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #000000, #004d00);
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h2 {
+      font-size: 2em;
+      text-align: center;
+      margin-bottom: 20px;
+      color: #00ff88;
+      text-shadow: 0 0 8px #00ff88;
+    }
+
+    .filter-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: transparent;
+      border: 1px solid #00ff88;
+      color: #00ff88;
+      padding: 8px 15px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .filter-btn:hover,
+    .filter-btn.active {
+      background: #00ff88;
+      color: #000;
+    }
+
+    .chart-card {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+      max-width: 800px;
+      width: 100%;
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 400px !important;
+    }
+
+    .btn-voltar {
+      display: block;
+      text-align: center;
+      margin-top: 30px;
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 14px;
+      border-radius: 12px;
+      color: #00ff88;
+      font-weight: bold;
+      transition: background 0.3s;
+      max-width: 800px;
+      width: 100%;
+    }
+
+    .btn-voltar:hover {
+      background: rgba(0, 255, 136, 0.25);
+    }
+
+    @media (max-width: 600px) {
+      h2 { font-size: 1.6em; }
+      canvas { height: 300px !important; }
+    }
+  </style>
 </head>
 <body>
-  <h2>Gráfico de Peso Diário</h2>
-  <canvas id="pesoChart"></canvas>
+
+  <h2>🏋️ Evolução de Peso</h2>
+
+  <div class="filter-buttons">
+    <button class="filter-btn active" onclick="filtrarDados('all')">Tudo</button>
+    <button class="filter-btn" onclick="filtrarDados(7)">7 dias</button>
+    <button class="filter-btn" onclick="filtrarDados(30)">30 dias</button>
+  </div>
+
+  <div class="chart-card">
+    <canvas id="pesoChart"></canvas>
+  </div>
+
+  <a href="{{ url_for('perfil') }}" class="btn-voltar">⬅️ Voltar</a>
 
   <script>
+    const labelsOriginais = {{ labels|tojson }};
+    const pesosOriginais = {{ pesos|tojson }};
+
     const ctx = document.getElementById('pesoChart').getContext('2d');
-    const pesoChart = new Chart(ctx, {
-      type: 'line',
+
+    const chart = new Chart(ctx, {
+      type: 'bar',
       data: {
-        labels: {{ labels|tojson }},
+        labels: labelsOriginais,
         datasets: [{
           label: 'Peso (kg)',
-          data: {{ pesos|tojson }},
-          borderColor: 'rgba(75, 192, 192, 1)',
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-          tension: 0.3,
-          fill: true,
-          pointRadius: 4
+          data: pesosOriginais,
+          backgroundColor: '#00ff88',
+          borderColor: '#00cc66',
+          borderWidth: 1,
+          borderRadius: 6,
+          hoverBackgroundColor: '#00ffaa'
         }]
       },
       options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            display: true,
+            labels: {
+              color: '#fff',
+              font: { size: 14, weight: 'bold' }
+            }
+          },
+          tooltip: {
+            backgroundColor: '#00ff88',
+            titleColor: '#000',
+            bodyColor: '#000',
+            padding: 10,
+            displayColors: false,
+            callbacks: {
+              label: (ctx) => ` ${ctx.parsed.y} kg`
+            }
+          }
+        },
+        interaction: {
+          intersect: false,
+          mode: 'nearest'
+        },
         scales: {
           x: {
-            title: { display: true, text: 'Data/Hora' }
+            title: { display: true, text: 'Data', color: '#00ff88', font: { size: 14 } },
+            ticks: { color: '#fff', maxRotation: 45, minRotation: 45 },
+            grid: { color: 'rgba(255, 255, 255, 0.1)' }
           },
           y: {
-            title: { display: true, text: 'Kg' },
+            title: { display: true, text: 'Peso (kg)', color: '#00ff88', font: { size: 14 } },
+            ticks: { color: '#fff' },
+            grid: { color: 'rgba(255, 255, 255, 0.1)' },
             beginAtZero: false
           }
         }
       }
     });
+
+    function filtrarDados(dias) {
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      if (dias === 'all') {
+        chart.data.labels = labelsOriginais;
+        chart.data.datasets[0].data = pesosOriginais;
+      } else {
+        const limite = new Date();
+        limite.setDate(limite.getDate() - dias);
+
+        const filtrados = labelsOriginais.map((label, i) => {
+          const data = new Date(label);
+          return data >= limite ? i : null;
+        }).filter(i => i !== null);
+
+        chart.data.labels = filtrados.map(i => labelsOriginais[i]);
+        chart.data.datasets[0].data = filtrados.map(i => pesosOriginais[i]);
+      }
+
+      chart.update();
+    }
   </script>
-  
-  <a href="{{ url_for('perfil') }}" class="btn-voltar">← Voltar</a>
+
 </body>
 </html>

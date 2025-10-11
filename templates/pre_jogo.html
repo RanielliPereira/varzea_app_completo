@@ -1,13 +1,136 @@
-{% extends "base.html" %}
-{% block content %}
-<div class="pre-jogo-box">
-    <h1>💡 Dicas Pré-Jogo</h1>
-    <ul>
-        {% for dica in dicas %}
-          <li>{{ dica }}</li>
-        {% endfor %}
-    </ul>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>💡 Dicas Pré-Jogo - NA RAÇA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #000, #004d00);
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+    }
 
-    <a href="{{ url_for('dashboard') }}" class="btn-voltar">⬅️ Voltar ao Menu</a>
-</div>
-{% endblock %}
+    h1 {
+      text-align: center;
+      font-size: 2.4em;
+      margin-bottom: 25px;
+      color: #00ff88;
+      text-shadow: 0 0 10px #00ff88;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 0 0 25px rgba(0,0,0,0.4);
+      backdrop-filter: blur(8px);
+      max-width: 600px;
+      margin: 0 auto 30px auto;
+      animation: fadeIn 0.6s ease;
+    }
+
+    h2 {
+      color: #00ff88;
+      text-align: center;
+      font-size: 1.6em;
+      margin-bottom: 20px;
+      text-shadow: 0 0 8px #00ff88;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    ul li {
+      background: rgba(255,255,255,0.1);
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      border-radius: 10px;
+      font-size: 1.2em;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-left: 5px solid #00ff88;
+      transition: transform 0.2s ease;
+    }
+
+    ul li:hover {
+      transform: scale(1.03);
+    }
+
+    strong {
+      color: #00ff88;
+      flex-shrink: 0;
+    }
+
+    .icon {
+      font-size: 1.6em;
+      flex-shrink: 0;
+      animation: floatIcon 2.5s ease-in-out infinite;
+    }
+
+    .back-btn {
+      display: block;
+      text-align: center;
+      margin-top: 30px;
+      text-decoration: none;
+      background: rgba(255,255,255,0.1);
+      padding: 14px;
+      border-radius: 12px;
+      color: #00ff88;
+      font-weight: bold;
+      transition: background 0.3s;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .back-btn:hover {
+      background: rgba(0,255,136,0.25);
+    }
+
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(10px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+
+    @keyframes floatIcon {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+      100% { transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 2em; }
+      h2 { font-size: 1.4em; }
+      ul li { font-size: 1.1em; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>💡 Dicas Pré-Jogo</h1>
+
+  <!-- Lista de Dicas -->
+  <div class="card">
+    <h2>⚽ Preparação Inteligente</h2>
+    <ul>
+      {% for dica in dicas %}
+        <li>
+          <span class="icon">🔥</span>
+          <strong>Dica:</strong> {{ dica }}
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <a href="{{ url_for('dashboard') }}" class="back-btn">🔄 Voltar ao Menu</a>
+
+</body>
+</html>
