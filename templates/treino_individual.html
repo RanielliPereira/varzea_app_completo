@@ -1,13 +1,175 @@
 {% extends "base.html" %}
 {% block content %}
-  <div class="treino-box">
+
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #16a34a 0%, #0f766e 100%);
+      font-family: 'Poppins', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+    }
+
+    .treino-container {
+      max-width: 750px;
+      width: 100%;
+      background: #ffffff;
+      padding: 60px 45px;
+      border-radius: 35px;
+      box-shadow: 0 15px 50px rgba(0,0,0,0.25);
+      text-align: center;
+      animation: fadeIn 0.6s ease;
+    }
+
+    .treino-titulo {
+      font-size: 3.2rem; /* título bem grande */
+      color: #16a34a;
+      margin-bottom: 45px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+    }
+
+    .treino-lista {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 50px;
+      text-align: left;
+    }
+
+    .treino-lista li {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      background: #f0fdf4;
+      border-left: 7px solid #16a34a;
+      padding: 22px 25px;
+      margin-bottom: 20px;
+      border-radius: 18px;
+      color: #222;
+      font-size: 1.9rem; /* aumentei fonte */
+      line-height: 1.5;
+      transition: 0.3s;
+    }
+
+    .treino-lista li:hover {
+      background: #dcfce7;
+      transform: scale(1.02);
+    }
+
+    .bullet {
+      font-size: 2.2rem;
+    }
+
+    .checkin-btn {
+      background-color: #16a34a;
+      color: white;
+      border: none;
+      padding: 25px 35px;
+      border-radius: 18px;
+      font-weight: 800;
+      font-size: 1.9rem;
+      cursor: pointer;
+      transition: 0.3s;
+      width: 100%;
+    }
+
+    .checkin-btn:hover {
+      background-color: #15803d;
+      transform: translateY(-3px);
+    }
+
+    .checkin-feito {
+      background-color: #dc2626;
+      cursor: not-allowed;
+      opacity: 0.85;
+    }
+
+    .back-center {
+      margin-top: 35px;
+    }
+
+    .back-btn {
+      background-color: #0f766e;
+      color: white;
+      text-decoration: none;
+      padding: 22px 35px;
+      border-radius: 18px;
+      font-weight: 800;
+      font-size: 1.9rem;
+      transition: 0.3s;
+      display: inline-block;
+    }
+
+    .back-btn:hover {
+      background-color: #15803d;
+      transform: translateY(-3px);
+    }
+
+    .nav-treinos {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 45px;
+      gap: 20px;
+    }
+
+    .btn-nav {
+      flex: 1;
+      background-color: #16a34a;
+      color: white;
+      text-decoration: none;
+      padding: 22px 0;
+      border-radius: 18px;
+      font-weight: 800;
+      font-size: 1.9rem;
+      transition: 0.3s;
+      text-align: center;
+    }
+
+    .btn-nav:hover {
+      background-color: #15803d;
+      transform: translateY(-3px);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 500px) {
+      .treino-container {
+        padding: 40px 20px;
+      }
+
+      .treino-titulo {
+        font-size: 2.5rem;
+      }
+
+      .treino-lista li {
+        font-size: 1.7rem;
+        padding: 18px;
+      }
+
+      .checkin-btn, .back-btn, .btn-nav {
+        font-size: 1.7rem;
+        padding: 18px;
+      }
+    }
+  </style>
+  
+  
+  <div class="treino-container">
     <!-- Título centralizado -->
     <h1 class="treino-titulo">{{ treino.titulo }}</h1>
 
     <!-- Lista de exercícios -->
     <ul class="treino-lista">
       {% for ex in treino.exercicios %}
-        <li>{{ ex }}</li>
+        <li>
+          <span class="bullet">🏋️</span> {{ ex }}
+        </li>
       {% endfor %}
     </ul>
 
@@ -22,114 +184,18 @@
 
     <!-- Botão de voltar ao Dashboard -->
     <div class="back-center">
-      <a href="{{ url_for('dashboard') }}" class="back-btn"> 🔄
-      Voltar ao Menu</a>
+      <a href="{{ url_for('dashboard') }}" class="back-btn"> 🔄 Voltar ao Menu</a>
     </div>
 
     <!-- Navegação entre treinos -->
     <div class="nav-treinos">
       {% if anterior %}
-        <a class="btn" href="{{ url_for('treino_individual', treino_id=anterior) }}"> ⬅️
-        Anterior</a>
+        <a class="btn-nav" href="{{ url_for('treino_individual', treino_id=anterior) }}"> ⬅️ Anterior</a>
       {% endif %}
       {% if proximo %}
-        <a class="btn" href="{{ url_for('treino_individual', treino_id=proximo) }}">➡️
-        Próximo</a>
+        <a class="btn-nav" href="{{ url_for('treino_individual', treino_id=proximo) }}">Próximo ➡️</a>
       {% endif %}
     </div>
   </div>
 
-  <style>
-    .treino-box {
-      max-width: 500px;
-      margin: 60px auto;
-      background: #fff;
-      padding: 30px;
-      border-radius: 20px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-
-    .treino-titulo {
-      font-size: 1.8rem;
-      color: #16a34a;
-      margin-bottom: 20px;
-      font-weight: bold;
-    }
-
-    .treino-lista {
-      list-style: none;
-      padding: 0;
-      margin-bottom: 30px;
-      text-align: left;
-    }
-
-    .treino-lista li {
-      background: #f0fdf4;
-      border-left: 4px solid #16a34a;
-      padding: 10px 15px;
-      margin-bottom: 10px;
-      border-radius: 10px;
-      color: #333;
-      font-size: 1rem;
-    }
-
-    .checkin-btn {
-      background-color: #16a34a;
-      color: white;
-      border: none;
-      padding: 12px 25px;
-      border-radius: 10px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .checkin-btn:hover {
-      background-color: #15803d;
-    }
-
-    .checkin-feito {
-      background-color: #dc2626;
-      cursor: not-allowed;
-    }
-
-    .back-center {
-      margin-top: 25px;
-    }
-
-    .back-btn {
-      background-color: #3c3c3c;
-      color: white;
-      text-decoration: none;
-      padding: 10px 20px;
-      border-radius: 10px;
-      font-weight: bold;
-      transition: 0.3s;
-    }
-
-    .back-btn:hover {
-      background-color: #15803d;
-    }
-
-    .nav-treinos {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 30px;
-    }
-
-    .btn {
-      background-color: #16a34a;
-      color: white;
-      text-decoration: none;
-      padding: 10px 20px;
-      border-radius: 10px;
-      font-weight: bold;
-      transition: 0.3s;
-    }
-
-    .btn:hover {
-      background-color: #15803d;
-    }
-  </style>
 {% endblock %}
