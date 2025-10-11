@@ -378,20 +378,7 @@ TREINO_SEMI_PRO = [
     ]},
 ]
 
-CARDAPIO = [
-("Café da manhã", ["Ovos mexidos + pão integral", "Banana + aveia", "Café/chá sem açúcar"]),
-("Almoço", ["Arroz + feijão", "Frango grelhado ou ovos", "Salada/legumes"]),
-("Lanche", ["Fruta (banana/maçã)", "Amendoim torrado (pequena porção)"]),
-("Jantar", ["Arroz ou batata", "Proteína (frango/ovo)", "Legumes refogados"]),
-("Hidratação", ["2–3L de água por dia", "Evitar refrigerante e álcool pré-jogo"])
-]
 
-SUBS = [
-("Proteínas", "Frango → ovos → sardinha enlatada"),
-("Carboidratos", "Arroz → batata → mandioca"),
-("Legumes", "Cenoura → abobrinha → brócolis"),
-("Extras", "Aveia, banana, feijão, tomate, cebola, alho")
-]
 
 def table_exists(conn, table_name):
     """Retorna True se a tabela existir no banco SQLite."""
@@ -753,9 +740,24 @@ def meus_checkins():
     return render_template("meus_checkins.html", checkins=registros)
 
 @app.route("/dieta")
-@login_required
-def dieta_view():
-    return render_template("dieta.html", cardapio=CARDAPIO, subs=SUBS)
+def dieta():
+    cardapio = [
+("Café da manhã", ["Ovos mexidos + pão integral", "Banana + aveia", "Café/chá sem açúcar"]),
+("Almoço", ["Arroz + feijão", "Frango grelhado ou ovos", "Salada/legumes"]),
+("Lanche", ["Fruta (banana/maçã)", "Amendoim torrado (pequena porção)"]),
+("Jantar", ["Arroz ou batata", "Proteína (frango/ovo)", "Legumes refogados"]),
+("Hidratação", ["2–3L de água por dia", "Evitar refrigerante e álcool pré-jogo"])
+]
+
+    subs = [
+("Proteínas", "Frango → ovos → sardinha enlatada"),
+("Carboidratos", "Arroz → batata → mandioca"),
+("Legumes", "Cenoura → abobrinha → brócolis"),
+("Extras", "Aveia, banana, feijão, tomate, cebola, alho")
+]
+
+    macros = [50, 30, 20]  # exemplo: porcentagem de carbo, proteínas e gorduras
+    return render_template("dieta.html", cardapio=cardapio, subs=subs, macros=macros)
 
 @app.route("/recuperacao")
 @login_required

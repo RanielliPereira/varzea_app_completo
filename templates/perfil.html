@@ -4,73 +4,223 @@
   <meta charset="utf-8">
   <title>Perfil</title>
   <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: #fff;
+      font-family: "Poppins", sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 450px;
+      width: 100%;
+      padding: 20px;
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+
+    form {
+      background: #ffffff;
+      color: #000;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0px 4px 20px rgba(0,0,0,0.2);
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-top: 10px;
+      margin-bottom: 5px;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 1rem;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+    }
+
+    .back-btn,
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-top: 10px;
+      font-weight: 600;
+    }
+
+    .back-btn:hover,
+    .btn:hover {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      transform: scale(1.02);
+    }
+
+    .resultado-box {
+      background: #fff;
+      color: #000;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .resultado-box h3 {
+      margin-top: 0;
+    }
+
+    .baixo { border-left: 6px solid #3b82f6; }
+    .ideal { border-left: 6px solid #22c55e; }
+    .sobrepeso { border-left: 6px solid #facc15; }
+    .obesidade { border-left: 6px solid #ef4444; }
+
+    .btn-voltar {
+      display: inline-block;
+      padding: 12px 18px;
+      margin: 8px 5px 0;
+      background: #334155;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 12px;
+      transition: 0.3s;
+    }
+    
+    .btn-medidas {
+      display: inline-block;
+      padding: 12px 18px;
+      margin: 8px 5px 0;
+      background: #16a34a;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 12px;
+      transition: 0.3s;
+    }
+
+    .btn-voltar:hover {
+      background: #475569;
+    }
+
+    .peso-form {
+      background: #fff;
+      color: #000;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0px 4px 15px rgba(0,0,0,0.2);
+      margin-top: 20px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    ul li {
+      background: #334155;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+    }
+
+    .alert {
+      text-align: center;
+      padding: 12px;
+      background: #16a34a;
+      color: white;
+      border-radius: 10px;
+      margin-top: 15px;
+    }
+  </style>
 </head>
 <body>
-  <h2>Perfil</h2>
-  <form method="POST">
-    <label>Idade:</label>
-    <input type="text" name="idade" value="{{ prof.age if prof else '' }}">
-    <label>Altura (m):</label>
-    <input type="text" name="altura" value="{{ prof.height_m if prof else '' }}">
-    <label>Peso (kg):</label>
-    <input type="text" name="peso" value="{{ prof.weight_kg if prof else '' }}">
-    <button class= "back-btn" type="submit">Salvar e Calcular IMC</button>
-  </form>
+  <div class="container">
+    <h2><i class="fa-solid fa-user"></i> Perfil</h2>
 
-  {% if imc is not none and imc > 0 %}
-    <div class="resultado-box 
-        {% if faixa == 'Abaixo do peso' %}baixo{% endif %}
-        {% if faixa == 'Peso ideal' %}ideal{% endif %}
-        {% if faixa == 'Sobrepeso' %}sobrepeso{% endif %}
-        {% if faixa == 'Obesidade' %}obesidade{% endif %}
-    ">
-      <h3>📊 Resultado do IMC</h3>
-      <p><strong>IMC:</strong> {{ imc }} ({{ faixa }})</p>
-      <p><strong>Peso ideal:</strong> entre {{ peso_ideal[0] }} kg e {{ peso_ideal[1] }} kg</p>
-      <p><em>{{ motivacao }}</em></p>
-    </div>
+    <form method="POST">
+      <label><i class="fa-solid fa-cake-candles"></i> Idade:</label>
+      <input type="text" name="idade" value="{{ prof.age if prof else '' }}">
 
-    <p style="text-align:center; margin-top:20px;">
-      
-      
-  <a href="{{ url_for('medidas') }}" class="btn-voltar">
-    📝 
-    Medidas
-    </a>
-      
-      <a href="/dashboard" class="btn-voltar"> 🔄
-      Voltar ao Menu</a>
-    </p>
-   
-    <hr>
+      <label><i class="fa-solid fa-ruler-vertical"></i> Altura (m):</label>
+      <input type="text" name="altura" value="{{ prof.height_m if prof else '' }}">
 
-    <h3>📅 Registrar peso diário</h3>
-    <form action="{{ url_for('peso_diario') }}" method="POST" class="peso-form">
-      <label for="peso_diario">Peso de hoje (kg):</label>
-      <input type="number" step="0.1" name="peso_diario" id="peso_diario" required>
-      <button type="submit" class="btn">Salvar peso</button>
+      <label><i class="fa-solid fa-weight-scale"></i> Peso (kg):</label>
+      <input type="text" name="peso" value="{{ prof.weight_kg if prof else '' }}">
+
+      <button class="back-btn" type="submit">
+        💪 Salvar e Calcular IMC
+      </button>
     </form>
 
-    {% if pesos %}
-      <h4>Histórico</h4>
-      <ul>
-        {% for row in pesos %}
-          <li>{{ row.log_date }} – {{ row.weight_kg }} kg</li>
-        {% endfor %}
-      </ul>
+    {% if imc is not none and imc > 0 %}
+      <div class="resultado-box 
+          {% if faixa == 'Abaixo do peso' %}baixo{% endif %}
+          {% if faixa == 'Peso ideal' %}ideal{% endif %}
+          {% if faixa == 'Sobrepeso' %}sobrepeso{% endif %}
+          {% if faixa == 'Obesidade' %}obesidade{% endif %}
+      ">
+        <h3>📊 Resultado do IMC</h3>
+        <p><strong>IMC:</strong> {{ imc }} ({{ faixa }})</p>
+        <p><strong>Peso ideal:</strong> entre {{ peso_ideal[0] }} kg e {{ peso_ideal[1] }} kg</p>
+        <p><em>{{ motivacao }}</em></p>
+      </div>
+
+      <div style="text-align:center;">
+        <a href="{{ url_for('medidas') }}" class="btn-medidas" style="display:block; text-align:center; margin-top:10px;">
+          📝 Medidas
+        </a>
+       
+      </div>
+
+      <form action="{{ url_for('peso_diario') }}" method="POST" class="peso-form">
+        <h3>📅 Registrar peso diário</h3>
+        <label for="peso_diario">Peso de hoje (kg):</label>
+        <input type="number" step="0.1" name="peso_diario" id="peso_diario" required>
+        <button type="submit" class="btn">Salvar peso</button>
+      </form>
+
+      {% if pesos %}
+        <h4 style="margin-top:20px;">📈 Histórico</h4>
+        <ul>
+          {% for row in pesos %}
+            <li>{{ row.log_date }} – {{ row.weight_kg }} kg</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
     {% endif %}
-  {% endif %}
-  
-  <a href="{{ url_for('peso_grafico') }}" class="btn-voltar">
-    📊 Ver Gráfico
-</a>
 
-{% if mensagem %}
-  <div class="alert alert-success" style="margin-top:10px;">
-    {{ mensagem }}
+    <a href="{{ url_for('peso_grafico') }}" class="btn-voltar" style="display:block; text-align:center; margin-top:10px;">
+      📊 Ver Gráfico
+    </a>
+    
+     <a href="/dashboard" class="btn-voltar" style="display:block; text-align:center; margin-top:10px;">
+          🔄 Voltar ao Menu
+        </a>
+
+    {% if mensagem %}
+      <div class="alert">{{ mensagem }}</div>
+    {% endif %}
   </div>
-{% endif %}
-
-
 </body>
 </html>
