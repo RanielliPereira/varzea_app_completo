@@ -14,7 +14,7 @@
     <input type="text" name="altura" value="{{ prof.height_m if prof else '' }}">
     <label>Peso (kg):</label>
     <input type="text" name="peso" value="{{ prof.weight_kg if prof else '' }}">
-    <button type="submit">Salvar e Calcular IMC</button>
+    <button class= "back-btn" type="submit">Salvar e Calcular IMC</button>
   </form>
 
   {% if imc is not none and imc > 0 %}
@@ -34,9 +34,12 @@
       
       
   <a href="{{ url_for('medidas') }}" class="btn-voltar">
-    📝 Medidas
-</a>
-      <a href="/dashboard" class="btn-voltar">← Voltar ao Dashboard</a>
+    📝 
+    Medidas
+    </a>
+      
+      <a href="/dashboard" class="btn-voltar"> 🔄
+      Voltar ao Menu</a>
     </p>
    
     <hr>
@@ -58,7 +61,7 @@
     {% endif %}
   {% endif %}
   
-  <a href="{{ url_for('peso_grafico') }}" class="btn-grafico">
+  <a href="{{ url_for('peso_grafico') }}" class="btn-voltar">
     📊 Ver Gráfico
 </a>
 

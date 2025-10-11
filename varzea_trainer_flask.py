@@ -49,7 +49,9 @@ serializer = URLSafeTimedSerializer(app.secret_key)
 
 def get_db():
     conn = sqlite3.connect("varzea.db")
-    cur = conn.cursor()
+    conn.row_factory = sqlite3.Row
+    return conn
+    
     # ✅ Garante que a coluna 'plano' existe
     cur.execute("PRAGMA table_info(checkins)")
     colunas = [row[1] for row in cur.fetchall()]
@@ -428,22 +430,36 @@ def register():
         except sqlite3.IntegrityError:
             flash("E-mail já cadastrado.", "error")
     return render_template("register.html")
-
-@app.route("/login", methods=["GET","POST"])
+@app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email = request.form.get("email","").strip().lower()
-        password = request.form.get("password","")
-        conn = get_db()
-        user = conn.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        # ✅ Cria conexão com suporte a dicionário (row_factory)
+        conn = sqlite3.connect("varzea.db")
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+
+        # 🔍 Busca usuário pelo e-mail
+        cur.execute("SELECT * FROM users WHERE email=?", (email,))
+        user = cur.fetchone()
         conn.close()
+
+        # ✅ Valida senha e faz login
         if user and check_password_hash(user["password_hash"], password):
             session["uid"] = user["id"]
             session["name"] = user["name"]
             session["email"] = user["email"]
+            flash(f"👋 Bem-vindo, {user['name']}!", "success")
             return redirect(url_for("dashboard"))
-        flash("Credenciais inválidas.", "error")
+
+        # ❌ Caso falhe
+        flash("Credenciais inválidas. Tente novamente.", "error")
+
+    # 🧭 Mostra página de login
     return render_template("login.html")
+    
 
 @app.route("/forgot", methods=["GET","POST"])
 def forgot():
