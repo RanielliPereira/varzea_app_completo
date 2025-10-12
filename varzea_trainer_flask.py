@@ -513,11 +513,11 @@ def dashboard():
     # Frase motivacional aleatória
     frase = random.choice(FRASES)
 
-    nome = session.get("nome", "Craque")
+    name = session.get("name")
 
     return render_template(
         "dashboard.html",
-        nome=nome,
+        name=name,
         frase=frase,
         feitos_amador=feitos_amador,
         total_amador=TOTAL_AMADOR,
@@ -617,7 +617,7 @@ def treino_semi_pro():
 
 # --- NOVA ROTA: Vídeo final do Semi-Pro
 @app.route("/video_final")
-def video_final_semi():
+def video_final():
     if "uid" not in session:
         return redirect("/login")
 
@@ -632,7 +632,7 @@ def video_final_semi():
 
     return render_template("video_final.html")
 
-    
+   
 @app.route("/treino/<int:treino_id>", methods=["GET", "POST"])
 @login_required
 def treino_individual(treino_id):
@@ -641,47 +641,57 @@ def treino_individual(treino_id):
 
     with get_db() as conn:
         cur = conn.cursor()
+        
+    # ✅ Garante que a tabela existe
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS checkins (
+            user_id INTEGER,
+            treino TEXT,
+            plano TEXT
+        )
+    """)
+    conn.commit()
 
-        # ✅ Verifica se já fez check-in neste treino
-        ja_fez = cur.execute(
+    # --- 🟢 Quando o usuário faz check-in
+    if request.method == "POST":
+        treino_id_post = int(request.form.get("treino_id", treino_id))
+
+        # Verifica se já fez check-in
+        cur.execute(
             "SELECT 1 FROM checkins WHERE user_id=? AND treino=? AND plano=?",
-            (user_id, f"treino_{treino_id}", "amador")
-        ).fetchone()
+            (user_id, f"treino_{treino_id_post}", "amador")
+        )
 
-        # ✅ Quando o jogador faz check-in
-        if request.method == "POST" and not ja_fez:
+        if not cur.fetchone():
             cur.execute(
                 "INSERT INTO checkins (user_id, treino, plano) VALUES (?, ?, ?)",
-                (user_id, f"treino_{treino_id}", "amador")
+                (user_id, f"treino_{treino_id_post}", "amador")
             )
             conn.commit()
-            flash("✅ Check-in salvo com sucesso!", "success")
-            return redirect(url_for("treino_individual", treino_id=treino_id))
 
-        # --- Busca todos os treinos feitos pelo usuário
-        feitos = cur.execute(
-            "SELECT treino FROM checkins WHERE user_id=? AND plano=?",
-            (user_id, "amador")
-        ).fetchall()
-        feitos = [f[0] for f in feitos]
-        feito = f"treino_{treino_id}" in feitos
-
-        # ✅ Quando o jogador completa TODOS os treinos do plano
-        if len(feitos) >= total_dias:
-            # limpa os check-ins do usuário no plano amador
+        # ✅ Se for o último treino, redireciona pro vídeo final e reseta
+        if treino_id_post >= total_dias:
             cur.execute("DELETE FROM checkins WHERE user_id=? AND plano=?", (user_id, "amador"))
             conn.commit()
-
-            flash("🏁 Parabéns! Você concluiu os 13 dias de treino. Assista ao vídeo de motivação 👊", "success")
+            conn.close()
             return redirect(url_for("video_final_13"))
 
-    # ✅ Busca o treino atual pelo ID
-    treino = next((t for t in TREINOS if t["id"] == treino_id), None)
-    if not treino:
-        abort(404)
+        return redirect(url_for("treino_individual", treino_id=treino_id_post + 1))
 
+    # --- 📊 Busca os treinos feitos
+    cur.execute("SELECT treino FROM checkins WHERE user_id=? AND plano=?", (user_id, "amador"))
+    feitos = [row[0] for row in cur.fetchall()]
+    conn.close()
+
+    # ✅ Se o treino_id for maior que o total, vai direto pro vídeo final
+    if treino_id > total_dias:
+        return redirect(url_for("video_final_13"))
+
+    # --- 📌 Dados do treino atual
+    treino = TREINOS [treino_id - 1]
     anterior = treino_id - 1 if treino_id > 1 else None
     proximo = treino_id + 1 if treino_id < total_dias else None
+    feito = f"treino_{treino_id}" in feitos
 
     return render_template(
         "treino_individual.html",
@@ -690,6 +700,7 @@ def treino_individual(treino_id):
         proximo=proximo,
         feito=feito
     )
+
     
     
 @app.route("/video_final_13")
