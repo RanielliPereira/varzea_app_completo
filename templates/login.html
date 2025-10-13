@@ -1,1 +1,22 @@
-<!doctype html><html lang="pt-br"><head><meta charset="utf-8"><title>Login</title><link rel="stylesheet" href="/static/style.css"></head><body class="login-page"><div class="login-box"><h2>Entrar</h2>{% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for cat,msg in messages %}<div class="msg">{{ msg }}</div>{% endfor %}{% endif %}{% endwith %}<form method="post"><input type="email" name="email" placeholder="E-mail" required><input type="password" name="password" placeholder="Senha" required><button>Entrar</button></form><p><a href="/register">Criar conta</a> • <a href="/forgot">Esqueci</a></p></div></body></html>
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8">
+    <title>Login</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<style>
+  .btn-btn {
+      display: inline-block;
+      padding: 12px 18px;
+      margin: 8px 5px 0;
+      background: #334155;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 12px;
+      transition: 0.3s;
+    }
+    
+    </style>
+  </head>
+<body class="login-page"><div class="login-box"><h2>Entrar</h2>{% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for cat,msg in messages %}<div class="msg">{{ msg }}</div>{% endfor %}{% endif %}{% endwith %}<form method="post"><input type="email" name="email" placeholder="E-mail" required><input type="password" name="password" placeholder="Senha" required><button>Entrar</button></form><p><a href="/register" class="btn-btn">✍ Criar conta</a> • <a href="/forgot" class= "btn-btn">🔑 Esqueci Senha</a></p></div></body></html>
