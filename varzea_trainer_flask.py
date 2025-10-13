@@ -47,21 +47,13 @@ app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("SMTP_FROM", app.config["MAIL
 mail = Mail(app)
 serializer = URLSafeTimedSerializer(app.secret_key)
 
+
+DB_PATH = "varzea.db"
+
 def get_db():
-    conn = sqlite3.connect("varzea.db")
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
-    
-    # ✅ Garante que a coluna 'plano' existe
-    cur.execute("PRAGMA table_info(checkins)")
-    colunas = [row[1] for row in cur.fetchall()]
-    if "plano" not in colunas:
-        cur.execute("ALTER TABLE checkins ADD COLUMN plano TEXT DEFAULT 'amador'")
-        conn.commit()
-    return conn
-    
-    
-DB_PATH = "varzea.db"
 
 def init_db():
     # Só cria o banco se ele ainda não existir
@@ -104,16 +96,16 @@ def init_db():
                 FOREIGN KEY(user_id) REFERENCES users(id)
             )
         """)
-    
-    # Tabela de check-in dos treinos
+
+        # Tabela alternativa de check-ins
         cur.execute("""
-        CREATE TABLE IF NOT EXISTS checkin (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            plano TEXT NOT NULL,
-            data DATE NOT NULL
-        );
-    """)
+            CREATE TABLE IF NOT EXISTS checkin (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                plano TEXT NOT NULL,
+                data DATE NOT NULL
+            )
+        """)
 
         # Histórico de peso diário
         cur.execute("""
@@ -126,12 +118,28 @@ def init_db():
             )
         """)
 
+        # ✅ NOVA TABELA — Medidas corporais
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS body_measures (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                peso REAL,
+                braco REAL,
+                perna REAL,
+                cintura REAL,
+                quadril REAL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
+
         conn.commit()
         conn.close()
         print("✅ Banco criado com sucesso!")
     else:
         print("📁 Banco já existente — usando o atual.")
-        
+
+# Executa na inicialização
 init_db()
 
 def send_reset_email(to_email):
