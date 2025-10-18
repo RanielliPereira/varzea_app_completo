@@ -179,7 +179,7 @@
         {% endfor %}
       </ul>
       {% if treino.id in concluidos %}
-        <button class="done">✔ Treino Concluído</button>
+        <button class="done">✅ Treino Concluído</button>
       {% else %}
         <form method="POST" action="{{ url_for('concluir_treino_velocidade', dia=treino.id) }}">
           <button type="submit">Concluir Treino</button>
