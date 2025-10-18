@@ -103,6 +103,49 @@ h3 {
     gap: 18px;
     align-items: center;
 }
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+  text-align: center;
+}
+
+.menu-btn {
+  display: block;
+  width:100%
+  background: linear-gradient(135deg, #1e1e1e, #2e2e2e);
+  color: white;
+  padding: 18px;
+  text-decoration: none;
+  font-weight: bold;
+  border-radius: 12px;
+  font-size: clamp(18px, 4vw, 24px);
+  text-align: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 12px rgba(0,0,0,0.6);
+}
+
+.menu-btn:hover {
+  transform: translateY(-3px);
+  background: linear-gradient(135deg, #2a2a2a, #444);
+}
+
+.menu-btn.destaque {
+  background: linear-gradient(135deg, #ff6a00, #ff3c00);
+  font-weight: bold;
+  box-shadow: 0 4px 15px rgba(255, 76, 0, 0.5);
+}
+
+.menu-btn.destaque:hover {
+  background: linear-gradient(135deg, #ff7e29, #ff531a);
+  transform: translateY(-4px) scale(1.03);
+}
+
+.menu-btn.sair {
+  background: linear-gradient(135deg, #4e4e4e, #2c2c2c);
+}
 .item {
     display: block;
     width: 100%;
@@ -158,6 +201,8 @@ h3 {
         <a class="btn" href="{{ url_for('treino_semi_pro', treino_id=1) }}">🔥 Iniciar Semi-Pro</a>
 
         <div class="menu">
+            <a href="{{ url_for('treinos_especificos') }}" class="menu-btn destaque">
+              ⚡ Treinos Específicos </a>
             <a class="item" href="/pre_jogo">📋 Pré-jogo</a>
             <a class="item" href="/recuperacao">💆 Pós-jogo</a>
             <a class="item" href="/dieta">🥗 Dieta</a>

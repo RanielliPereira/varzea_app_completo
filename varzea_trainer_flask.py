@@ -132,6 +132,16 @@ def init_db():
                 FOREIGN KEY(user_id) REFERENCES users(id)
             )
         """)
+        
+        cur.execute("""
+          CREATE TABLE IF NOT EXISTS treino_velocidade (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          dia INTEGER NOT NULL,
+          UNIQUE(user_id, dia),
+          FOREIGN KEY(user_id) REFERENCES users(id)
+          );
+      """)
 
         conn.commit()
         conn.close()
@@ -1071,6 +1081,668 @@ def pre_jogo():
         "🕑 No dia do jogo: faça um café da manhã/lanche leve 3 h antes e um aquecimento gradual."
     ]
     return render_template("pre_jogo.html", dicas=dicas)
+  
+@app.route("/treinos_especificos")
+@login_required
+def treinos_especificos():
+    return render_template("treinos_especificos.html")
+    
+TREINOS_VELOCIDADE = [
+    {
+        "id": 1,
+        "titulo": "Dia 1 - Aceleração Inicial",
+        "descricao": "Foca no impulso e na rapidez da primeira passada — essencial para ganhar no arranque.",
+        "exercicios": [
+            "Sprint estacionário 6x20s",
+            "Skipping rápido 4x30s",
+            "Agachamento + impulso 4x10",
+            "Prancha frontal 3x30s"
+        ]
+    },
+    {
+        "id": 2,
+        "titulo": "Dia 2 - Passada Rápida",
+        "descricao": "Melhora a frequência e coordenação das passadas para atingir máxima velocidade.",
+        "exercicios": [
+            "Corrida estacionária acelerada 6x20s",
+            "Passadas curtas e rápidas 4x15m (ou 5 passos)",
+            "Lateral shuffle 4x20s",
+            "Core lateral 3x30s"
+        ]
+    },
+    {
+        "id": 3,
+        "titulo": "Dia 3 - Reação e Arranque",
+        "descricao": "Treina a velocidade de reação para ganhar tempo no 1x1 e antecipações.",
+        "exercicios": [
+            "Sprint reativo (com sinal sonoro ou visual) 6x",
+            "Saltos reativos + arranque curto 4x",
+            "Skipping explosivo 4x20s",
+            "Prancha dinâmica 3x30s"
+        ]
+    },
+    {
+        "id": 4,
+        "titulo": "Dia 4 - Velocidade Máxima",
+        "descricao": "Desenvolve velocidade máxima e melhora a capacidade de manter o ritmo forte.",
+        "exercicios": [
+            "Corrida estacionária máxima 8x15s",
+            "Aceleração curta (3 a 5m) 5x",
+            "Saltos alternados + impulso 4x15",
+            "Mobilidade ativa"
+        ]
+    },
+    {
+        "id": 5,
+        "titulo": "Dia 5 - Sprint Repetido",
+        "descricao": "Foca em repetir sprints curtos com alta intensidade, simulando situações reais de jogo.",
+        "exercicios": [
+            "Sprint estacionário 20s ON / 20s OFF (8 rounds)",
+            "Passadas rápidas + troca de direção 5x",
+            "Skipping + salto 4x30s",
+            "Core frontal e lateral 3x30s"
+        ]
+    },
+    {
+        "id": 6,
+        "titulo": "Dia 6 - Velocidade com Bola ⚽",
+        "descricao": "Desenvolve velocidade e controle de bola em alta intensidade, mesmo em espaços pequenos.",
+        "exercicios": [
+            "Condução curta de bola + aceleração 5x",
+            "Passe na parede + arranque 4x",
+            "Troca de direção com bola 5x",
+            "Mobilidade ativa com bola"
+        ]
+    },
+    {
+        "id": 7,
+        "titulo": "Dia 7 - Teste de Velocidade 🏁",
+        "descricao": "Teste final para avaliar ganho de velocidade e explosão da semana.",
+        "exercicios": [
+            "Sprint estacionário máximo 10x15s",
+            "Passadas rápidas cronometradas",
+            "Burpees com arranque curto 3x12",
+            "Descompressão muscular"
+        ]
+    }
+]
+
+# ------------------- TREINO DE EXPLOSÃO -------------------
+
+TREINOS_EXPLOSAO = [
+    {
+        "id": 1,
+        "titulo": "Dia 1 - Arranque Explosivo",
+        "descricao": "Desenvolve potência nas pernas e reação rápida para sair do lugar com velocidade.",
+        "exercicios": [
+            "Sprint estacionário 6x20s",
+            "Agachamento com salto 4x10",
+            "Skipping explosivo 4x20s",
+            "Prancha frontal 3x30s"
+        ]
+    },
+    {
+        "id": 2,
+        "titulo": "Dia 2 - Aceleração Curta",
+        "descricao": "Foca em acelerações de curta distância simulando arrancadas de jogo.",
+        "exercicios": [
+            "Arranque em 3 metros (ida e volta) 6x",
+            "Lateral shuffle + sprint curto 4x",
+            "Salto vertical com impulso 4x10",
+            "Core lateral 3x30s"
+        ]
+    },
+    {
+        "id": 3,
+        "titulo": "Dia 3 - Potência de Pernas",
+        "descricao": "Fortalece e dá explosão às pernas com exercícios funcionais intensos.",
+        "exercicios": [
+            "Pliometria estacionária (saltos rápidos) 4x20s",
+            "Afundo com salto alternado 3x12",
+            "Burpees explosivos 3x10",
+            "Prancha dinâmica 3x30s"
+        ]
+    },
+    {
+        "id": 4,
+        "titulo": "Dia 4 - Tempo de Reação",
+        "descricao": "Trabalha sua capacidade de reagir rapidamente a estímulos, simulando situações reais.",
+        "exercicios": [
+            "Sprint reativo (com sinal sonoro ou visual) 6x",
+            "Mudança rápida de direção em 2m 5x",
+            "Saltos alternados 4x15",
+            "Mobilidade ativa"
+        ]
+    },
+    {
+        "id": 5,
+        "titulo": "Dia 5 - Aceleração Contínua",
+        "descricao": "Melhora sua capacidade de manter explosão repetida em pouco tempo.",
+        "exercicios": [
+            "Sprint estacionário 30s ON / 30s OFF (8 rounds)",
+            "Skipping com potência 4x30s",
+            "Agachamento + salto 4x10",
+            "Core frontal e lateral 3x30s"
+        ]
+    },
+    {
+        "id": 6,
+        "titulo": "Dia 6 - Explosão com Bola ⚽",
+        "descricao": "Simula acelerações e potência com bola, mesmo em espaço pequeno.",
+        "exercicios": [
+            "Condução de bola curta + arranque 5x",
+            "Passe na parede + sprint estacionário 4x",
+            "Mudança rápida de direção com bola 5x",
+            "Mobilidade ativa com bola"
+        ]
+    },
+    {
+        "id": 7,
+        "titulo": "Dia 7 - Teste de Explosão 🏁",
+        "descricao": "Teste seu nível de potência e velocidade acumulada da semana.",
+        "exercicios": [
+            "Sprint estacionário máximo 10x15s",
+            "Pliometria rápida 5x20s",
+            "Burpees explosivos 3x12",
+            "Descompressão muscular"
+        ]
+    }
+]
+
+# ------------------- TREINO DE FORÇA -------------------
+
+TREINOS_FORCA = [
+    {
+        "id": 1,
+        "titulo": "Dia 1 - Base de Força 🏋️",
+        "descricao": "Foco em construir uma base sólida com exercícios fundamentais.",
+        "exercicios": [
+            "Agachamento 4x10",
+            "Flexão de braço 4x10",
+            "Prancha frontal 3x30s",
+            "Alongamento dinâmico"
+        ]
+    },
+    {
+        "id": 2,
+        "titulo": "Dia 2 - Força Funcional",
+        "descricao": "Fortalece músculos estabilizadores e movimentos compostos.",
+        "exercicios": [
+            "Afundo unilateral 3x12",
+            "Prancha lateral 3x30s cada lado",
+            "Superman 3x15",
+            "Abdominal bicicleta 3x20"
+        ]
+    },
+    {
+        "id": 3,
+        "titulo": "Dia 3 - Core + Pernas",
+        "descricao": "Fortalecimento do centro e potência de membros inferiores.",
+        "exercicios": [
+            "Agachamento com salto 3x10",
+            "Ponte de quadril 4x15",
+            "Prancha dinâmica 3x30s",
+            "Abdominal reto 3x20"
+        ]
+    },
+    {
+        "id": 4,
+        "titulo": "Dia 4 - Força Explosiva",
+        "descricao": "Integra força com velocidade para movimentos potentes.",
+        "exercicios": [
+            "Pliometria 3x12",
+            "Agachamento isométrico 3x30s",
+            "Flexão com palmas 3x10",
+            "Core lateral 3x30s"
+        ]
+    },
+    {
+        "id": 5,
+        "titulo": "Dia 5 - Força com Bola ⚽",
+        "descricao": "Aplicação prática da força nos movimentos do futebol.",
+        "exercicios": [
+            "Passe com potência 4x10",
+            "Domínio + arranque 4x",
+            "Sprint + chute 4x",
+            "Mobilidade de quadril"
+        ]
+    },
+    {
+        "id": 6,
+        "titulo": "Dia 6 - Força Total",
+        "descricao": "Treino de corpo inteiro para consolidar ganhos.",
+        "exercicios": [
+            "Agachamento + flexão 4x10",
+            "Prancha frontal 3x40s",
+            "Ponte unilateral 3x12",
+            "Alongamento ativo"
+        ]
+    },
+    {
+        "id": 7,
+        "titulo": "Dia 7 - Teste de Força 🏁",
+        "descricao": "Avaliação dos ganhos de força e resistência muscular.",
+        "exercicios": [
+            "Máximo de flexões em 1 minuto",
+            "Máximo de agachamentos em 1 minuto",
+            "Máximo de prancha (tempo)",
+            "Recuperação ativa"
+        ]
+    }
+]
+
+
+TREINOS_RESISTENCIA = [
+    {
+        "id": 1,
+        "titulo": "Dia 1 - Base Aeróbica",
+        "descricao": "Constrói sua base de resistência para manter o ritmo de jogo, mesmo em espaço reduzido.",
+        "exercicios": [
+            "Corrida estacionária leve - 15 min",
+            "Skipping 4x30s",
+            "Polichinelo 3x30s",
+            "Alongamento dinâmico"
+        ]
+    },
+    {
+        "id": 2,
+        "titulo": "Dia 2 - Corrida Intervalada",
+        "descricao": "Alterna momentos de alta e baixa intensidade simulando sprints, mesmo sem campo.",
+        "exercicios": [
+            "Corrida estacionária forte 30s + leve 30s (6x)",
+            "Skipping explosivo 4x30s",
+            "Agachamento com salto 3x10",
+            "Core frontal 3x30s"
+        ]
+    },
+    {
+        "id": 3,
+        "titulo": "Dia 3 - Resistência de Jogo",
+        "descricao": "Simula intensidade de jogo com deslocamentos curtos e exercícios funcionais.",
+        "exercicios": [
+            "Mudança de direção em 2m - 5x",
+            "Lateral shuffle estacionário 4x30s",
+            "Burpees 3x12",
+            "Prancha com movimento 3x30s"
+        ]
+    },
+    {
+        "id": 4,
+        "titulo": "Dia 4 - Fartlek",
+        "descricao": "Treino contínuo com variações de velocidade sem precisar sair de casa.",
+        "exercicios": [
+            "Corrida estacionária alternando ritmo - 20 min",
+            "Acelerações progressivas (skipping) 6x30s",
+            "Saltos contínuos 3x30s",
+            "Mobilidade geral"
+        ]
+    },
+    {
+        "id": 5,
+        "titulo": "Dia 5 - Alta Intensidade",
+        "descricao": "Trabalha sua capacidade de manter intensidade alta mesmo em pouco espaço.",
+        "exercicios": [
+            "HIIT 30s ON / 30s OFF (8 rounds)",
+            "Corrida estacionária com aceleração 4x30s",
+            "Agachamento explosivo 4x10",
+            "Core lateral 3x30s"
+        ]
+    },
+    {
+        "id": 6,
+        "titulo": "Dia 6 - Resistência com Bola ⚽",
+        "descricao": "Simula situações reais de jogo com bola, mesmo em espaço pequeno.",
+        "exercicios": [
+            "Condução de bola em zigue-zague curto - 5x",
+            "Passe na parede + desmarque curto - 5x",
+            "Sprint estacionário com bola - 4x30s",
+            "Mobilidade ativa com bola"
+        ]
+    },
+    {
+        "id": 7,
+        "titulo": "Dia 7 - Teste Final 🏁",
+        "descricao": "Teste sua resistência e finalize a semana com intensidade máxima, em casa.",
+        "exercicios": [
+            "HIIT 8 rounds 30s forte / 30s leve",
+            "Shuttle run indoor (2m ida e volta) 5x",
+            "Saltos + sprint estacionário",
+            "Descompressão muscular"
+        ]
+    }
+]
+
+TREINOS_MOBILIDADE = [
+    {
+        "id": 1,
+        "titulo": "Dia 1 - Mobilidade de Tornozelo e Quadril",
+        "descricao": "Melhora a base da sua movimentação e aceleração.",
+        "exercicios": [
+            "Mobilidade de tornozelo 3x30s",
+            "Alongamento borboleta 3x30s",
+            "Rotação de quadril em pé 3x10",
+            "Prancha com elevação de perna 3x20s"
+        ]
+    },
+    {
+        "id": 2,
+        "titulo": "Dia 2 - Mobilidade de Coluna e Posterior",
+        "descricao": "Aumenta a flexibilidade e evita lesões lombares.",
+        "exercicios": [
+            "Gato-camelo 3x10",
+            "Toque nos pés com pernas estendidas 3x30s",
+            "Alongamento em posição de prancha 3x30s",
+            "Respiração profunda com alongamento 3x"
+        ]
+    },
+    {
+        "id": 3,
+        "titulo": "Dia 3 - Mobilidade de Joelhos e Core",
+        "descricao": "Fortalece e estabiliza joelhos, quadril e abdômen.",
+        "exercicios": [
+            "Agachamento profundo com mobilidade 3x10",
+            "Elevação de joelhos no chão 3x12",
+            "Prancha lateral 3x20s",
+            "Alongamento de isquiotibiais"
+        ]
+    },
+    {
+        "id": 4,
+        "titulo": "Dia 4 - Mobilidade Total do Corpo",
+        "descricao": "Ativa e solta todas as articulações antes do jogo.",
+        "exercicios": [
+            "Movimento articular completo 2x",
+            "Alongamento dinâmico em deslocamento",
+            "Mobilidade torácica + quadril",
+            "Alongamento em prancha alta 3x20s"
+        ]
+    },
+    {
+        "id": 5,
+        "titulo": "Dia 5 - Mobilidade Explosiva",
+        "descricao": "Foca em amplitude rápida para arranques e giros.",
+        "exercicios": [
+            "Mobilidade em avanço 3x",
+            "Rotação de tronco com passada 3x12",
+            "Skips + mobilidade ativa",
+            "Alongamento em movimento 3x20s"
+        ]
+    },
+    {
+        "id": 6,
+        "titulo": "Dia 6 - Mobilidade com Bola ⚽",
+        "descricao": "Trabalha controle de bola e amplitude corporal.",
+        "exercicios": [
+            "Dominadas + giro de quadril 3x",
+            "Controle de bola alternando pernas 3x30s",
+            "Alongamento dinâmico com bola",
+            "Mobilidade leve ativa"
+        ]
+    },
+    {
+        "id": 7,
+        "titulo": "Dia 7 - Recuperação Ativa 🧘",
+        "descricao": "Dia leve de recuperação com foco em respiração e amplitude.",
+        "exercicios": [
+            "Alongamentos leves (todo corpo) 10 min",
+            "Respiração profunda controlada",
+            "Mobilidade articular suave",
+            "Relaxamento postural"
+        ]
+    }
+]
+
+@app.route("/treino_resistencia", methods=["GET", "POST"])
+@login_required
+def treino_resistencia():
+    user_id = session["uid"]
+
+    conn = sqlite3.connect("varzea.db")
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS treino_resistencia (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            dia INTEGER NOT NULL,
+            UNIQUE(user_id, dia)
+        )
+    """)
+    conn.commit()
+
+    cur.execute("SELECT dia FROM treino_resistencia WHERE user_id=?", (user_id,))
+    concluidos = [row[0] for row in cur.fetchall()]
+
+    progresso = int((len(concluidos) / len(TREINOS_RESISTENCIA)) * 100)
+
+    conn.close()
+
+    return render_template(
+        "treino_resistencia.html",
+        treinos=TREINOS_RESISTENCIA,
+        concluidos=concluidos,
+        progresso=progresso
+    )
+
+
+@app.route("/concluir_treino_resistencia/<int:dia>", methods=["POST"])
+@login_required
+def concluir_treino_resistencia(dia):
+    user_id = session["uid"]
+    conn = sqlite3.connect("varzea.db")
+    cur = conn.cursor()
+    cur.execute("INSERT OR IGNORE INTO treino_resistencia (user_id, dia) VALUES (?, ?)", (user_id, dia))
+    conn.commit()
+
+    # Se terminou todos os treinos, reseta
+    cur.execute("SELECT COUNT(*) FROM treino_resistencia WHERE user_id=?", (user_id,))
+    total = cur.fetchone()[0]
+    if total >= len(TREINOS_RESISTENCIA):
+        cur.execute("DELETE FROM treino_resistencia WHERE user_id=?", (user_id,))
+        conn.commit()
+
+    conn.close()
+    return redirect(url_for("treino_resistencia"))
+
+@app.route("/treino_velocidade", methods=["GET", "POST"])
+@login_required
+def treino_velocidade():
+    user_id = session["uid"]
+
+    conn = sqlite3.connect("varzea.db")
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS treino_velocidade (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            dia INTEGER NOT NULL,
+            UNIQUE(user_id, dia)
+        )
+    """)
+    conn.commit()
+
+    cur.execute("SELECT dia FROM treino_velocidade WHERE user_id=?", (user_id,))
+    concluidos = [row[0] for row in cur.fetchall()]
+
+    progresso = int((len(concluidos) / len(TREINOS_VELOCIDADE)) * 100)
+
+    return render_template(
+        "treino_velocidade.html",
+        treinos=TREINOS_VELOCIDADE,
+        concluidos=concluidos,
+        progresso=progresso
+    )
+
+
+@app.route("/concluir_treino_velocidade/<int:dia>", methods=["POST"])
+@login_required
+def concluir_treino_velocidade(dia):
+    user_id = session["uid"]
+    conn = sqlite3.connect("varzea.db")
+    cur = conn.cursor()
+    cur.execute("INSERT OR IGNORE INTO treino_velocidade (user_id, dia) VALUES (?, ?)", (user_id, dia))
+    conn.commit()
+
+    # Se terminou todos os treinos, reseta
+    cur.execute("SELECT COUNT(*) FROM treino_velocidade WHERE user_id=?", (user_id,))
+    total = cur.fetchone()[0]
+    if total >= len(TREINOS_VELOCIDADE):
+        cur.execute("DELETE FROM treino_velocidade WHERE user_id=?", (user_id,))
+        conn.commit()
+
+    conn.close()
+    return redirect(url_for("treino_velocidade"))
+    
+
+
+
+@app.route("/treino_forca", methods=["GET", "POST"])
+@login_required
+def treino_forca():
+    user_id = session["uid"]
+
+    conn = sqlite3.connect("varzea.db")
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS treino_forca (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            dia INTEGER NOT NULL,
+            UNIQUE(user_id, dia)
+        )
+    """)
+    conn.commit()
+
+    cur.execute("SELECT dia FROM treino_forca WHERE user_id=?", (user_id,))
+    concluidos = [row[0] for row in cur.fetchall()]
+
+    progresso = int((len(concluidos) / len(TREINOS_FORCA)) * 100)
+
+    return render_template(
+        "treino_forca.html",
+        treinos=TREINOS_FORCA,
+        concluidos=concluidos,
+        progresso=progresso
+    )
+
+
+@app.route("/concluir_treino_forca/<int:dia>", methods=["POST"])
+@login_required
+def concluir_treino_forca(dia):
+    user_id = session["uid"]
+    conn = sqlite3.connect("varzea.db")
+    cur = conn.cursor()
+    cur.execute("INSERT OR IGNORE INTO treino_forca (user_id, dia) VALUES (?, ?)", (user_id, dia))
+    conn.commit()
+
+    cur.execute("SELECT COUNT(*) FROM treino_forca WHERE user_id=?", (user_id,))
+    total = cur.fetchone()[0]
+    if total >= len(TREINOS_FORCA):
+        cur.execute("DELETE FROM treino_forca WHERE user_id=?", (user_id,))
+        conn.commit()
+
+    conn.close()
+    return redirect(url_for("treino_forca"))
+
+
+
+@app.route("/treino_explosao", methods=["GET", "POST"])
+@login_required
+def treino_explosao():
+    user_id = session["uid"]
+
+    conn = sqlite3.connect("varzea.db")
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS treino_explosao (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            dia INTEGER NOT NULL,
+            UNIQUE(user_id, dia)
+        )
+    """)
+    conn.commit()
+
+    cur.execute("SELECT dia FROM treino_explosao WHERE user_id=?", (user_id,))
+    concluidos = [row[0] for row in cur.fetchall()]
+
+    progresso = int((len(concluidos) / len(TREINOS_EXPLOSAO)) * 100)
+
+    return render_template(
+        "treino_explosao.html",
+        treinos=TREINOS_EXPLOSAO,
+        concluidos=concluidos,
+        progresso=progresso
+    )
+
+
+@app.route("/concluir_treino_explosao/<int:dia>", methods=["POST"])
+@login_required
+def concluir_treino_explosao(dia):
+    user_id = session["uid"]
+    conn = sqlite3.connect("varzea.db")
+    cur = conn.cursor()
+    cur.execute("INSERT OR IGNORE INTO treino_explosao (user_id, dia) VALUES (?, ?)", (user_id, dia))
+    conn.commit()
+
+    cur.execute("SELECT COUNT(*) FROM treino_explosao WHERE user_id=?", (user_id,))
+    total = cur.fetchone()[0]
+    if total >= len(TREINOS_EXPLOSAO):
+        cur.execute("DELETE FROM treino_explosao WHERE user_id=?", (user_id,))
+        conn.commit()
+
+    conn.close()
+    return redirect(url_for("treino_explosao"))
+
+
+@app.route("/treino_mobilidade", methods=["GET", "POST"])
+@login_required
+def treino_mobilidade():
+    user_id = session["uid"]
+    conn = sqlite3.connect("varzea.db")
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS treino_mobilidade (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            dia INTEGER NOT NULL,
+            UNIQUE(user_id, dia)
+        )
+    """)
+    conn.commit()
+
+    # Buscar treinos concluídos atualizados
+    cur.execute("SELECT dia FROM treino_mobilidade WHERE user_id=?", (user_id,))
+    concluidos = [row[0] for row in cur.fetchall()]
+
+    progresso = int((len(concluidos) / len(TREINOS_MOBILIDADE)) * 100)
+
+    conn.close()
+
+    return render_template(
+        "treino_mobilidade.html",
+        treinos=TREINOS_MOBILIDADE,
+        concluidos=concluidos,
+        progresso=progresso
+    )
+
+@app.route("/concluir_treino_mobilidade/<int:dia>", methods=["POST"])
+@login_required
+def concluir_treino_mobilidade(dia):
+    user_id = session["uid"]
+    conn = sqlite3.connect("varzea.db")
+    cur = conn.cursor()
+    cur.execute("INSERT OR IGNORE INTO treino_mobilidade (user_id, dia) VALUES (?, ?)", (user_id, dia))
+    conn.commit()
+
+    cur.execute("SELECT COUNT(*) FROM treino_mobilidade WHERE user_id=?", (user_id,))
+    total = cur.fetchone()[0]
+    if total >= len(TREINOS_MOBILIDADE):
+        cur.execute("DELETE FROM treino_mobilidade WHERE user_id=?", (user_id,))
+        conn.commit()
+
+    conn.close()
+    return redirect(url_for("treino_mobilidade"))
+    
     
 @app.route("/logout")
 def logout():

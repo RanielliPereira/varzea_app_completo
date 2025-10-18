@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>Treinos Específicos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #000, #004d00);
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2.3em;
+      margin-bottom: 30px;
+      color: #00ff88;
+      text-shadow: 0 0 12px #00ff88;
+    }
+
+    .cards-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 25px;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .card:hover {
+      transform: scale(1.05);
+      background: rgba(0, 255, 136, 0.15);
+    }
+
+    .icon {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      animation: float 2.5s ease-in-out infinite;
+    }
+
+    .card h2 {
+      font-size: 1.3em;
+      font-weight: 600;
+      color: #00ff88;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+      100% { transform: translateY(0); }
+    }
+
+    .back-btn {
+      display: block;
+      text-align: center;
+      margin-top: 40px;
+      text-decoration: none;
+      background: rgba(255,255,255,0.1);
+      padding: 14px;
+      border-radius: 12px;
+      color: #00ff88;
+      font-weight: bold;
+      transition: background 0.3s;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .back-btn:hover {
+      background: rgba(0, 255, 136, 0.25);
+    }
+
+    @media (max-width: 600px) {
+      .cards-container {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🏋️ Treinos Específicos</h1>
+
+  <div class="cards-container">
+    <div class="card" onclick="location.href='{{ url_for('treino_velocidade') }}'">
+      <div class="icon">🚀</div>
+      <h2>Velocidade</h2>
+    </div>
+
+    <div class="card" onclick="location.href='{{ url_for('treino_forca') }}'">
+      <div class="icon">💪</div>
+      <h2>Força</h2>
+    </div>
+
+    <div class="card" onclick="location.href='{{ url_for('treino_resistencia') }}'">
+      <div class="icon">🫁</div>
+      <h2>Resistência</h2>
+    </div>
+    
+    <div
+    class="card" onclick="location.href='{{ url_for('treino_explosao') }}'">
+      <div class="icon">💣</div>
+      <h2>Explosão</h2>
+  </div>
+
+    <div class="card" onclick="location.href='{{ url_for('treino_mobilidade') }}'">
+      <div class="icon">🧘</div>
+      <h2>Mobilidade</h2>
+    </div>
+  </div>
+
+  <a href="{{ url_for('dashboard') }}" class="back-btn">🔄 Voltar ao Menu</a>
+</body>
+</html>
