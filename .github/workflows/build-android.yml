@@ -3,55 +3,40 @@ name: Build Android APK
 on:
   push:
     branches:
-      - main
       - master
-  workflow_dispatch:
+      - main
 
 jobs:
-  build-android:
+  build:
     runs-on: ubuntu-latest
-    env:
-      ANDROID_SDK_ROOT: /usr/local/android-sdk
 
     steps:
-      - name: Checkout do código
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      - name: Instalar dependências e Cordova
-        run: |
-          npm install -g cordova
-          npm ci || npm install
-
-      - name: Instalar OpenJDK 17
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y openjdk-17-jdk
-          echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
-          echo "PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH" >> $GITHUB_ENV
-
-      - name: Instalar SDK Android
-        run: |
-          sudo apt-get install -y wget unzip
-          yes | sdkmanager --licenses || true
-          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
-
-      - name: Adicionar plataforma Android
-        run: |
-          cordova platform add android || true
-
-      - name: Build APK debug
-        run: |
-          cordova build android --debug
-        env:
-          JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
-
-      - name: Upload do APK
-        uses: actions/upload-artifact@v4
+      - name: Set up Java
+        uses: actions/setup-java@v3
         with:
-          name: app-debug
-          path: platforms/android/app/build/outputs/apk/debug/*.apk
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Cordova
+        run: npm install -g cordova
+
+      - name: Build Cordova Android app
+        working-directory: varzea_app_completo
+        run: |
+          npm install
+          cordova platform add android
+          cordova build android --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: naraca-apk
+          path: varzea_app_completo/platforms/android/app/build/outputs/apk/release/*.apk
