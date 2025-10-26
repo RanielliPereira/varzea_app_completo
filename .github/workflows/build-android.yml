@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android APK (Otimizado)
 
 on:
   push:
@@ -10,27 +10,79 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout do repositório
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2️⃣ Configurar Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
+      # 3️⃣ Cache do Node.js/npm
+      - name: Cache Node modules
+        uses: actions/cache@v3
+        with:
+          path: varzea_app_completo/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('varzea_app_completo/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # 4️⃣ Instalar Cordova globalmente
       - name: Install Cordova
         run: npm install -g cordova
 
+      # 5️⃣ Configurar JDK
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # 6️⃣ Cache do Android SDK
+      - name: Cache Android SDK
+        uses: actions/cache@v3
+        with:
+          path: |
+            $HOME/android-sdk
+          key: ${{ runner.os }}-android-sdk
+          restore-keys: |
+            ${{ runner.os }}-android-sdk
+
+      # 7️⃣ Instalar Android SDK (se não estiver em cache)
+      - name: Install Android SDK tools
+        run: |
+          if [ ! -d "$HOME/android-sdk/cmdline-tools/latest" ]; then
+            sudo apt-get update
+            sudo apt-get install -y unzip wget
+            mkdir -p $HOME/android-sdk/cmdline-tools
+            cd $HOME/android-sdk
+            wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+            unzip cmdline-tools.zip -d cmdline-tools
+            rm cmdline-tools.zip
+            mkdir -p cmdline-tools/latest
+            mv cmdline-tools/bin cmdline-tools/latest/
+            mv cmdline-tools/lib cmdline-tools/latest/ 2>/dev/null
+          fi
+          export ANDROID_HOME=$HOME/android-sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+
+      # 8️⃣ Instalar dependências do projeto
       - name: Install project dependencies
         run: |
           cd varzea_app_completo
           npm install
 
+      # 9️⃣ Build Android APK
       - name: Build Android APK
         run: |
           cd varzea_app_completo
           cordova build android --release
 
+      # 🔟 Upload APK como artifact
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
