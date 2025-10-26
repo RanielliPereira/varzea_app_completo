@@ -4,38 +4,35 @@ on:
   push:
     branches:
       - master
-      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
-
-      - name: Set up Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+          node-version: 18
 
       - name: Install Cordova
         run: npm install -g cordova
 
-      - name: Build Cordova Android app
-        working-directory: varzea_app_completo
+      - name: Install project dependencies
         run: |
+          cd varzea_app_completo
           npm install
-          cordova platform add android
+
+      - name: Build Android APK
+        run: |
+          cd varzea_app_completo
           cordova build android --release
-      - name: Upload APK
+
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-        name: naraca-apk
-        path: varzea_app_completo/platforms/android/app/build/outputs/apk/release/*.apk
+          name: naraca-apk
+          path: varzea_app_completo/platforms/android/app/build/outputs/apk/release/*.apk
