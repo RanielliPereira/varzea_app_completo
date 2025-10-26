@@ -34,9 +34,8 @@ jobs:
           npm install
           cordova platform add android
           cordova build android --release
-
       - name: Upload APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: naraca-apk
-          path: varzea_app_completo/platforms/android/app/build/outputs/apk/release/*.apk
+        name: naraca-apk
+        path: varzea_app_completo/platforms/android/app/build/outputs/apk/release/*.apk
