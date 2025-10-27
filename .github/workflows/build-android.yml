@@ -52,18 +52,10 @@ jobs:
       # 7️⃣ Instalar Android SDK (se não estiver em cache)
       - name: Install Android SDK tools
         run: |
-          if [ ! -d "$HOME/android-sdk/cmdline-tools/latest" ]; then
-            sudo apt-get update
-            sudo apt-get install -y unzip wget
-            mkdir -p $HOME/android-sdk/cmdline-tools
-            cd $HOME/android-sdk
-            wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-            unzip cmdline-tools.zip -d cmdline-tools
-            rm cmdline-tools.zip
-            mkdir -p cmdline-tools/latest
-            mv cmdline-tools/bin cmdline-tools/latest/
-            mv cmdline-tools/lib cmdline-tools/latest/ 2>/dev/null
-          fi
+          wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
+          unzip -q commandlinetools-linux-10406996_latest.zip
+          mkdir -p $ANDROID_HOME/cmdline-tools/latest
+          mv cmdline-tools/* $ANDROID_HOME/cmdline-tools/latest/
           export ANDROID_HOME=$HOME/android-sdk
           export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
           yes | sdkmanager --licenses
