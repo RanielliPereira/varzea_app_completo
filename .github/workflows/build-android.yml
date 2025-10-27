@@ -33,12 +33,12 @@ jobs:
       - name: Install Cordova
         run: npm install -g cordova
 
-      # 5️⃣ Configurar JDK
+      # 5️⃣ Configurar JDK (compatível com Cordova/Gradle)
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 17
 
       # 6️⃣ Cache do Android SDK
       - name: Cache Android SDK
@@ -50,7 +50,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-android-sdk
 
-      # 7️⃣ Instalar Android SDK (se não estiver em cache)
+      # 7️⃣ Instalar Android SDK (corrigido)
       - name: Install Android SDK tools
         run: |
           if [ ! -d "$HOME/android-sdk/cmdline-tools/latest" ]; then
@@ -58,12 +58,11 @@ jobs:
             sudo apt-get install -y unzip wget
             mkdir -p $HOME/android-sdk/cmdline-tools
             cd $HOME/android-sdk
-            wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-            unzip cmdline-tools.zip -d cmdline-tools
-            rm cmdline-tools.zip
-            mkdir -p cmdline-tools/latest
-            mv cmdline-tools/bin cmdline-tools/latest/
-            mv cmdline-tools/lib cmdline-tools/latest/ 2>/dev/null
+            wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdtools.zip
+            unzip -q cmdtools.zip -d cmdline-tools
+            rm cmdtools.zip
+            # Corrigir nova estrutura (cmdline-tools/cmdline-tools/bin)
+            mv cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
           fi
           export ANDROID_HOME=$HOME/android-sdk
           export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
@@ -82,7 +81,7 @@ jobs:
           cd varzea_app_completo
           cordova build android --release
 
-      # 🔟 Upload APK como artifact
+      # 🔟 Upload APK como artifact (corrigido p/ v4)
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
