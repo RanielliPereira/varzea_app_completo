@@ -76,16 +76,15 @@ jobs:
 
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
-      # 8️⃣ Instalar dependências
+      # 8️⃣ Instalar dependências do projeto
       - name: Install project dependencies
         run: |
           npm install
 
-      # 9️⃣ Build do APK Android
+      # 9️⃣ Build Android APK
       - name: Build Android APK
         run: |
           cordova build android --release
-
       # 🔟 Upload do APK
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
