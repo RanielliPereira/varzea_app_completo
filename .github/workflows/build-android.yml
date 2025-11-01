@@ -67,9 +67,17 @@ jobs:
         run: |
           cordova build android --release
 
-      # 9️⃣ Upload do APK gerado
+      # 9️⃣ Build Android APK
+      - name: Build Android APK
+        run: |
+          cd varzea_app_completo
+          cordova platform remove android || true
+          cordova platform add android@12.0.1
+          cordova build android --release
+
+      # 🔟 Upload do APK gerado
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: naraca-apk
-          path: platforms/android/app/build/outputs/apk/release/*.apk
+          path: varzea_app_completo/platforms/android/app/build/outputs/apk/release/*.apk
