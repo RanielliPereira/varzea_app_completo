@@ -1,0 +1,40 @@
+name: Build Na Raça APK
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Cordova
+        run: npm install -g cordova
+
+      - name: Create Android platform
+        working-directory: ./na_raca_app
+        run: |
+          npm install
+          cordova platform add android
+
+      - name: Build release APK
+        working-directory: ./na_raca_app
+        run: |
+          cordova build android --release
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Na_Raca_Android
+          path: na_raca_app/platforms/android/app/build/outputs/apk/release/*.apk
