@@ -11,21 +11,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Clonar repositório
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Instalar Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      # 3️⃣ Instalar Cordova
       - name: Install Cordova
         run: npm install -g cordova
 
-      # 4️⃣ Instalar dependências e garantir plataforma Android
       - name: Install dependencies and ensure Android platform
         working-directory: ./na_raca_app
         run: |
@@ -36,14 +32,18 @@ jobs:
             echo "Android platform already exists — skipping add step."
           fi
 
-      # 5️⃣ Construir o APK de release
+      - name: Set Gradle version compatible with Cordova
+        working-directory: ./na_raca_app
+        run: |
+          mkdir -p platforms/android/gradle/wrapper/
+          echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.7-bin.zip" > platforms/android/gradle/wrapper/gradle-wrapper.properties
+
       - name: Build release APK
         working-directory: ./na_raca_app
         run: |
           cordova prepare android
           cordova build android --release
 
-      # 6️⃣ Upload do APK
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
