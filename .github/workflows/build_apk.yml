@@ -11,28 +11,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Clonar o repositório
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2️⃣ Instalar Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
+      # 3️⃣ Instalar Cordova
       - name: Install Cordova
         run: npm install -g cordova
 
+      # 4️⃣ Instalar dependências e adicionar plataforma Android
       - name: Create Android platform
         working-directory: ./na_raca_app
         run: |
           npm install
           cordova platform add android
 
+      # 5️⃣ Gerar o APK de release
       - name: Build release APK
         working-directory: ./na_raca_app
         run: |
+          cordova prepare android
           cordova build android --release
 
+      # 6️⃣ Fazer upload do APK como artefato
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
