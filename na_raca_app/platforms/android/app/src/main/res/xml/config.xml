@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.varzea.naraca" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>Na Raça</name>
+    <description>App oficial do sistema Na Raça</description>
+    <author email="time@varzea.com">F.C. Viver</author>
+    <content src="index.html" />
+    <allow-navigation href="https://varzea-app-completo.onrender.com/*" />
+    <access origin="*" />
+    <allow-intent href="market:*" />
+    <preference name="loglevel" value="DEBUG" />
+    <preference name="AndroidLaunchMode" value="singleTask" />
+    <preference name="SplashScreenDelay" value="2000" />
+</widget>
