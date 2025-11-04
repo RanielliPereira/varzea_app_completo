@@ -1,3 +1,5 @@
+import groovy.util.XmlParser
+import groovy.util.XmlParser
 /*
        Licensed to the Apache Software Foundation (ASF) under one
        or more contributor license agreements.  See the NOTICE file
@@ -19,7 +21,7 @@
 
 import java.util.regex.Pattern
 import io.github.g00fy2.versioncompare.Version
-
+import groovy.util.XmlParser
 String doEnsureValueExists(filePath, props, key) {
     if (props.get(key) == null) {
         throw new GradleException(filePath + ': Missing key required "' + key + '"')
@@ -128,7 +130,7 @@ def doExtractIntFromManifest(name) {
 def doGetConfigXml() {
     def xml = file("src/main/res/xml/config.xml").getText()
     // Disable namespace awareness since Cordova doesn't use them properly
-    return new XmlParser(false, false).parseText(xml)
+    return new groovy.util.XmlParser(false, false).parseText(xml)
 }
 
 def doGetConfigPreference(name, defaultValue) {
